@@ -533,11 +533,15 @@ const { defaultDocumentSettings, mergeDocumentSettings } = await import('../src/
   const off = buildPrintCss({ ...base, pageNumberFormat: 'off' });
   check('print CSS: numbers off → no counter boxes', !off.includes('counter(page)'));
 
+  // buildPrintCss speaks the ACTIVE UI language — pin it instead of
+  // inheriting the boot default (en since 1.0.0).
+  const { setLanguage } = await import('../src/i18n/index.js');
+  setLanguage('en');
   const right = buildPrintCss({
     ...base, pageNumberFormat: 'pageOfPages', pageNumberPosition: 'right',
   });
-  check('print CSS: "Seite N von M" at bottom right',
-    /@bottom-right \{ content: "Seite " counter\(page\) " von " counter\(pages\);/.test(right));
+  check('print CSS: "Page N of M" at bottom right',
+    /@bottom-right \{ content: "Page " counter\(page\) " of " counter\(pages\);/.test(right));
 
   const merged = buildPrintCss({
     ...base, footerText: 'Fuß', pageNumberFormat: 'number', pageNumberPosition: 'left',

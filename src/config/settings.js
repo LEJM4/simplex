@@ -11,12 +11,12 @@
 export const settings = {
   app: {
     name: 'Simplex', // product/brand name (a proper noun, not translated)
-    version: '0.33.0',    // keep in sync with package.json
+    version: '1.0.0',    // keep in sync with package.json
   },
 
   i18n: {
-    defaultLanguage: 'de',
-    fallbackLanguage: 'de', // used when a key is missing in the active language
+    defaultLanguage: 'en', // English is the project's main language since 1.0.0
+    fallbackLanguage: 'en', // used when a key is missing in the active language
     // Language names are shown in their own language (proper nouns) — they
     // are identical in every dictionary, hence they live here, not in i18n.
     nativeNames: { de: 'Deutsch', en: 'English' },

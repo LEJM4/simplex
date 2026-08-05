@@ -266,6 +266,7 @@ const waitFor = async (condition, tries = 100) => {
 console.log('PART 1 — chrome builds in de and en, silent and translated');
 /* ========================================================================== */
 
+setLanguage('de'); // the app default is en since 1.0.0 — the de block pins itself
 let chrome = buildChrome();
 
 const deUndoLabel = t('toolbar.undo');
@@ -290,7 +291,8 @@ check('en: labels actually changed with the language',
   t('toolbar.undo') !== deUndoLabel &&
   toolbarElement.querySelector('.toolbar-menu-trigger')?.textContent !== deMenuLabel);
 
-/* Interactions below run against the primary language. */
+/* Interactions below pin ONE language (de) — they drive controls via i18n
+   keys, not visible copy, so the choice is arbitrary but must be explicit. */
 chrome.toolbar.destroy();
 chrome.statusbar.destroy();
 setLanguage('de');

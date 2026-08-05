@@ -1,27 +1,29 @@
 <!doctype html>
-<!-- Simplex landing page (release point 12). Replaces the 0.32.0 redirect
-     placeholder. Design rules:
-       - pure HTML/CSS in ONE self-contained file — no framework, no build
+<!-- Simplex landing page (release point 12, English since the language
+     switch). Design rules:
+       - pure HTML/CSS in ONE self-contained file. No framework, no build
          step, no external requests (fonts, scripts, styles all inline);
          that keeps the privacy line in the footer literally true.
-       - every URL is relative to this site or points explicitly to the
-         GitHub repo (https://github.com/LEJM4/simplex) — external links
-         MUST carry the full protocol, or the browser resolves them as
-         paths on this Pages site (hello, 404).
+       - every URL is either relative to this site (starts with ./) or an
+         absolute https:// link to the GitHub repo. External links MUST
+         carry the full protocol, or the browser resolves them as paths on
+         this Pages site (hello, 404).
        - the two screenshot slots ship with inline SVG illustrations of the
          real UI; swap them for PNG screenshots by replacing the <svg> with
-         <img src="…"> inside the marked <figure> blocks — nothing else
+         <img src="…"> inside the marked <figure> blocks. Nothing else
          references them.
        - the page lives OUTSIDE the service worker's scope (the app's base
-         directory), so it always loads fresh from the network. -->
-<html lang="de">
+         directory), so it always loads fresh from the network.
+       - the app itself ships German and English; this page is English as
+         the project's public main language. -->
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Simplex — der schlanke Word-Ersatz. Offline, ohne Cloud.</title>
+    <title>Simplex — a lean word processor. Offline, no cloud.</title>
     <meta
       name="description"
-      content="Simplex ist ein schlanker Word-Ersatz: schreiben, formatieren, lokal speichern, DOCX austauschen, als PDF drucken — offline, ohne Cloud, ohne Anmeldung. Kostenlos und Open Source (GPL-3.0)."
+      content="Simplex is a lean replacement for Word: write, format, save to your own disk, exchange DOCX and print to PDF. Works offline, no cloud, no account. Free and open source (GPL-3.0)."
     />
     <meta name="theme-color" content="#08382f" />
     <link
@@ -265,23 +267,23 @@
             </svg>
             Simplex
           </span>
-          <h1>Schreiben ohne Ballast.</h1>
+          <h1>Just a word processor.</h1>
           <p class="claim">
-            Der schlanke Word-Ersatz für Briefe, Berichte und lange Texte:
-            schreiben, formatieren, lokal speichern, DOCX austauschen, als PDF
-            drucken — <strong>offline, ohne Cloud, ohne Anmeldung</strong>.
+            Simplex is for letters, reports and long documents. You write,
+            format, save to your own disk, exchange DOCX with Word users and
+            print to PDF. It runs offline. <strong>No cloud, no account.</strong>
           </p>
           <div class="cta">
-            <a class="button button--primary" href="./app/">Im Browser starten</a>
-            <a class="button button--secondary" href="https://github.com/LEJM4/simplex/releases/latest">Für Windows laden</a>
+            <a class="button button--primary" href="./app/">Open in the browser</a>
+            <a class="button button--secondary" href="https://github.com/LEJM4/simplex/releases/latest">Download for Windows</a>
           </div>
           <p class="fineprint">
-            Kostenlos &amp; Open Source (GPL-3.0) · läuft am besten in Chrome
-            oder Edge, Firefox mit kleinen Einschränkungen · im Browser
-            installierbar als App
+            Free and open source (GPL-3.0). Works best in Chrome and Edge,
+            Firefox with minor limitations. You can install it as an app
+            straight from the browser.
           </p>
         </div>
-        <svg class="hero-sheet" viewBox="0 0 340 300" role="img" aria-label="Ein weißes Dokumentblatt mit Textzeilen">
+        <svg class="hero-sheet" viewBox="0 0 340 300" role="img" aria-label="A white document sheet with lines of text">
           <g transform="rotate(-3 170 150)">
             <rect x="60" y="18" width="220" height="264" rx="4" fill="#fafaf8" />
             <rect x="88" y="46" width="120" height="10" rx="3" fill="#10312a" opacity="0.85" />
@@ -302,56 +304,56 @@
       </div>
     </header>
 
-    <!-- ================================================== Was ist Simplex -->
+    <!-- ===================================================== What it is -->
     <section>
       <div class="wrap">
-        <h2>Was ist Simplex?</h2>
+        <h2>What is Simplex?</h2>
         <p class="lead">
-          Kein 1000-Funktionen-Monolith, sondern die 20&nbsp;% von Word, die
-          95&nbsp;% echter Dokumente abdecken — schnell, lokal und ohne Konto.
+          Simplex covers the 20% of Word that 95% of real documents actually
+          use. The rest was left out on purpose.
         </p>
         <div class="cards">
           <div class="card">
             <div class="glyph" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V5h16v2M9 20h6M12 5v15" /></svg>
             </div>
-            <h3>Formatieren wie gewohnt</h3>
+            <h3>Everyday formatting</h3>
             <p>
-              Überschriften, Listen, Tabellen, Bilder, Farben, Einzüge,
-              Zeilenabstände — plus Suchen&nbsp;&amp;&nbsp;Ersetzen, Zählung
-              und Formatvorlagen.
+              Headings, lists, tables, images, colors, indents and line
+              spacing. Plus find &amp; replace, a live word count and
+              paragraph styles.
             </p>
           </div>
           <div class="card">
             <div class="glyph" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0 4-4m-4 4-4-4" /><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" /></svg>
             </div>
-            <h3>Deine Dateien gehören dir</h3>
+            <h3>Your files stay yours</h3>
             <p>
-              <code>.sdoc</code> ist lesbares JSON auf deiner Platte —
-              Autosave, Sicherungsstände und „Zuletzt geöffnet“ inklusive.
-              Kein Server, kein Konto.
+              A <code>.sdoc</code> file is readable JSON on your own disk.
+              Autosave, rotating backups and a recent-files list are built
+              in. Nothing ever leaves your machine.
             </p>
           </div>
           <div class="card">
             <div class="glyph" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h13M8 12h13M8 17h13" /><path d="M3 7h.01M3 12h.01M3 17h.01" /></svg>
             </div>
-            <h3>Word-Austausch</h3>
+            <h3>Speaks Word</h3>
             <p>
-              DOCX importieren und exportieren: Briefe kommen als Briefe an —
-              samt Standardschrift, Rändern, Kopf-/Fußzeile und Seitenzahlen.
+              Import and export DOCX. A letter arrives as a letter, with its
+              default font, margins, header, footer and page numbers intact.
             </p>
           </div>
           <div class="card">
             <div class="glyph" aria-hidden="true">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M8 17h8v4H8z" /></svg>
             </div>
-            <h3>Druckfertig</h3>
+            <h3>Prints like it should</h3>
             <p>
-              Echte Seitenansicht mit Word-Umbruchregeln, „erste Seite
-              anders“ für Briefköpfe, PDF über den ganz normalen
-              Druckdialog.
+              A true page view with Word's page-break rules, a separate
+              first page for letterheads, and PDF through the normal print
+              dialog.
             </p>
           </div>
         </div>
@@ -361,15 +363,15 @@
     <!-- ======================================================= Screenshots -->
     <section>
       <div class="wrap">
-        <h2>So sieht das aus</h2>
+        <h2>What it looks like</h2>
         <p class="lead">
-          Ein Blatt, eine Werkzeugleiste, keine Menü-Labyrinthe.
+          One sheet, one toolbar. That's the whole interface.
         </p>
         <div class="shots">
-          <!-- ✎ Screenshot 1: echtes Bildschirmfoto hier einsetzen —
-               das <svg> durch <img src="editor.png" alt="…"> ersetzen. -->
+          <!-- ✎ Screenshot 1: drop in a real screenshot here by replacing
+               the <svg> with <img src="editor.png" alt="…">. -->
           <figure class="shot">
-            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: der Simplex-Editor mit Werkzeugleiste und A4-Blatt">
+            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: the Simplex editor with toolbar and A4 sheet">
               <rect width="560" height="360" fill="#eceff0" />
               <rect x="0" y="0" width="560" height="44" fill="#ffffff" />
               <rect x="14" y="12" width="52" height="20" rx="5" fill="#e7f3ee" />
@@ -413,14 +415,14 @@
               <rect x="456" y="345" width="90" height="8" rx="4" fill="#c9d6d1" />
             </svg>
             <figcaption>
-              Der Editor: einzeilige Werkzeugleiste, weißes Blatt, Live-Zählung
-              in der Statusleiste.
+              The editor: a single-row toolbar, a white sheet, live word
+              count in the status bar.
             </figcaption>
           </figure>
-          <!-- ✎ Screenshot 2: echtes Bildschirmfoto hier einsetzen —
-               das <svg> durch <img src="seiten.png" alt="…"> ersetzen. -->
+          <!-- ✎ Screenshot 2: drop in a real screenshot here by replacing
+               the <svg> with <img src="pages.png" alt="…">. -->
           <figure class="shot">
-            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: Seitenansicht mit zwei Blättern, Kopfzeile und Seitenzahl">
+            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: page view with two sheets, header and page number">
               <rect width="560" height="360" fill="#eceff0" />
               <g>
                 <rect x="96" y="20" width="240" height="320" rx="3" fill="#ffffff" />
@@ -462,22 +464,23 @@
               <rect x="346" y="313" width="108" height="8" rx="4" fill="#bfe6d9" />
             </svg>
             <figcaption>
-              Seitenansicht: echte Blätter mit Kopf-/Fußzeile, Seitenzahlen und
-              Word-Umbruchregeln — drucken heißt „Als PDF speichern“.
+              Page view: real sheets with headers, footers and page numbers,
+              following Word's page-break rules. Printing means "Save as
+              PDF".
             </figcaption>
           </figure>
         </div>
       </div>
     </section>
 
-    <!-- ==================================================== Ehrliche Zeile -->
+    <!-- ===================================================== Honest limits -->
     <section style="padding-top: 0;">
       <div class="wrap">
         <div class="limits">
-          <strong>Ehrlich gesagt:</strong> Simplex will kein
-          100-%-Word-Klon sein. Komplexe Word-Layouts kommen beim Import
-          vereinfacht an, und Änderungsverfolgung, Kommentare oder Fußnoten
-          gibt es nicht — dafür bleibt alles schnell, lesbar und lokal.
+          <strong>Fair warning:</strong> Simplex isn't trying to be a full
+          Word clone. Complex layouts come through simplified on import, and
+          there's no track changes, comments or footnotes. In return,
+          everything stays fast, readable and on your machine.
         </div>
       </div>
     </section>
@@ -487,17 +490,18 @@
       <div class="wrap">
         <div class="windows">
           <div>
-            <h2 style="margin: 0;">Simplex für Windows</h2>
+            <h2 style="margin: 0;">Simplex for Windows</h2>
             <p>
-              Installer aus den GitHub-Releases — mit Dateizuordnung für
-              <code>.sdoc</code>-Doppelklick. Windows-SmartScreen warnt bei
-              unbekannten Herausgebern: „Weitere Informationen“ →
-              „Trotzdem ausführen“; die SHA-256-Prüfsumme zum Gegenprüfen
-              steht bei jedem Release. Die Browser-Version aktualisiert sich
-              selbst, den Desktop lädt man bei Bedarf neu.
+              The installer lives in the GitHub releases and registers the
+              <code>.sdoc</code> file type, so double-clicking a document
+              just works. Windows SmartScreen will warn you about an unknown
+              publisher: click "More info", then "Run anyway". Each release
+              lists a SHA-256 checksum in case you want to verify the
+              download. The browser version updates itself; the desktop app
+              is updated by installing a new version.
             </p>
           </div>
-          <a class="button button--primary" href="https://github.com/LEJM4/simplex/releases/latest">Zu den Releases</a>
+          <a class="button button--primary" href="https://github.com/LEJM4/simplex/releases/latest">Open the releases</a>
         </div>
       </div>
     </section>
@@ -506,18 +510,18 @@
     <footer>
       <div class="wrap">
         <div class="row">
-          <a href="https://github.com/LEJM4/simplex">Quellcode auf GitHub</a>
-          <a href="https://github.com/LEJM4/simplex/blob/main/LICENSE">Lizenz: GPL-3.0</a>
-          <a href="./app/">App starten</a>
-          <!-- ✎ Optional, falls gewünscht/nötig:
+          <a href="https://github.com/LEJM4/simplex">Source code on GitHub</a>
+          <a href="https://github.com/LEJM4/simplex/blob/main/LICENSE">License: GPL-3.0</a>
+          <a href="./app/">Open the app</a>
+          <!-- ✎ Optional, if legally required (e.g. German Impressumspflicht):
           <a href="impressum.html">Impressum</a> -->
         </div>
         <p>
-          Datenschutz in einem Satz: Diese Seite setzt keine Cookies, lädt
-          nichts von Drittservern und sammelt keine Daten — deine Dokumente
-          entstehen und bleiben auf deinem Gerät.
+          Privacy in one sentence: this page sets no cookies, loads nothing
+          from third-party servers and collects no data. Your documents are
+          created and stay on your device.
         </p>
-        <p>© 2026 LEJM4 · Simplex ist freie Software unter der GPL-3.0.</p>
+        <p>© 2026 LEJM4 · Simplex is free software under the GPL-3.0.</p>
       </div>
     </footer>
   </body>

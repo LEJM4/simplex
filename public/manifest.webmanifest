@@ -5,8 +5,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "lang": "de",
-  "description": "Schlanker Word-Ersatz: schreiben, formatieren, lokal speichern, DOCX austauschen, als PDF drucken — offline, ohne Cloud, ohne Anmeldung.",
+  "lang": "en",
+  "description": "A lean replacement for Word: write, format, save locally, exchange DOCX and print to PDF. Works offline, no cloud, no account.",
   "background_color": "#fafaf8",
   "theme_color": "#fafaf8",
   "icons": [

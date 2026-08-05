@@ -1,263 +1,260 @@
 # Simplex
 
-Ein schneller, schlanker Texteditor als Alltags-Ersatz für Word:
-schreiben, formatieren, lokal speichern, DOCX austauschen, als PDF mit
-Kopf-/Fußzeilen und Seitenzahlen drucken. **Offline, ohne Cloud, ohne
-Anmeldung.** Kein Word-Klon — Ziel sind die 20 % der Funktionen, die 95 %
-der Dokumente abdecken.
+A fast, lean text editor that replaces Word for everyday writing: write,
+format, save locally, exchange DOCX, print to PDF with headers, footers and
+page numbers. **Offline, no cloud, no account.** Not a Word clone: the goal
+is the 20% of features that cover 95% of real documents.
 
-## Funktionsumfang
+> Deutsche Fassung: [README.de.md](README.de.md)
 
-- **Schreiben & Formatieren:** Fett/Kursiv/Unterstrichen/Durchgestrichen,
-  Überschriften H1–H3, Zitat, Listen, Ausrichtung inkl. Blocksatz, Schriftart
-  und -größe, Textfarbe und Marker, Zeilen- und Absatzabstand (auch freie Werte)
-- **Nie Text verlieren:** debounced Autosave in IndexedDB mit
-  Wiederherstellung beim nächsten Start; dazu rotierende Sicherungsstände
-  (ca. alle 10 Minuten und vor jedem Überschreiben, Desktop zusätzlich mit
-  `.bak`-Datei) — jederzeit erreichbar über Datei → Sicherungen
-- **Dateien:** eigenes Format `.sdoc` (lesbares JSON, siehe unten),
-  Neu/Öffnen/Speichern über die File System Access API, „Zuletzt geöffnet“-Liste
-- **DOCX rein und raus:** Export über `docx`, Import über `mammoth`
-- **Druck & PDF:** echte Seiten mit Format, Rändern, Kopf-/Fußzeile und
-  Seitenzahlen über paged.js (Zahlenformat und Position pro Dokument
-  wählbar); Ausgabe über den Browser-Druckdialog
-- **Seitenansicht:** der Editor zeigt echte Blätter mit Kopf-/Fußzeile und
-  Seitenzahlen, teilt lange Absätze zeilengenau und hält sich an die
-  Word-Regeln (Absatzkontrolle, Überschrift bleibt bei ihrem Text, Bilder
-  und Tabellen brechen nicht auf) — Seiten ↔ Fortlaufend per Umschalter in
-  der Statusleiste oder in den Einstellungen („Dokumentansicht“); „Seite X
-  von Y“ steht links neben der Wortzählung
-- **Seite einrichten pro Dokument:** Papierformat (A4/A5/Letter) und
-  Ausrichtung, Ränder, Kopf-/Fußzeile, Seitenzahlen, Standardschrift,
-  „Erste Seite anders“ (Briefkopf: eigene Texte, keine Zahl auf Seite 1)
-- **Manueller Seitenumbruch:** Strg+Enter oder Toolbar-Button, reist im
-  `.sdoc` und in der DOCX als echter Word-Umbruch mit
-- **Alltag:** Tabellen, Bilder (einfügen, ziehen, Größe, Umfluss),
-  Suchen & Ersetzen, Wort-/Zeichenzählung, Rechtschreibung (Browser-nativ)
-- **Oberfläche:** Deutsch/Englisch live umschaltbar, Hell/Dunkel/System,
-  Zoom 50–200 %, einzeilige Toolbar (was nicht passt, wandert ins
-  ⋯-Überlaufmenü), vollständige Tastenkürzel-Übersicht (Datei → Tastenkürzel)
-- **Inspektionsmodus** (Einstellungen): zeigt an jedem Absatz die
-  Schriftgröße, hebt abweichende Größen und Abstände hervor und markiert
-  Abweichungen direkt im Text — zum schnellen Finden versehentlicher
-  Formatierungsänderungen
+## What it does
 
-## Simplex bekommen
+- **Writing & formatting:** bold/italic/underline/strikethrough, headings
+  H1–H3, block quote, lists, alignment including justified, font family and
+  size, text color and highlighter, line and paragraph spacing (free values
+  too)
+- **Never lose text:** debounced autosave to IndexedDB with recovery on the
+  next start, plus rotating backup generations (about every 10 minutes and
+  before every overwrite; the desktop additionally writes a `.bak` file).
+  Always available under File → Backups
+- **Files:** own `.sdoc` format (readable JSON, see below), new/open/save
+  through the File System Access API, recent-files list
+- **DOCX in and out:** export via `docx`, import via `mammoth`
+- **Print & PDF:** real pages with paper size, margins, header/footer and
+  page numbers via paged.js (number format and position per document);
+  output through the browser's print dialog
+- **Page view:** the editor shows real sheets with header/footer and page
+  numbers, splits long paragraphs line by line and follows Word's rules
+  (widow/orphan control, headings stay with their text, images and tables
+  don't break apart). Pages ↔ continuous via the status bar toggle or in
+  Settings ("Document view"); "Page X of Y" sits next to the word count
+- **Page setup per document:** paper size (A4/A5/Letter) and orientation,
+  margins, header/footer, page numbers, default font, "different first
+  page" (letterhead: its own texts, no number on page 1)
+- **Manual page break:** Ctrl+Enter or toolbar button; travels in `.sdoc`
+  and DOCX as a real Word page break
+- **Everyday things:** tables, images (insert, drag, resize, text wrap),
+  find & replace, word/character count, spell check (browser native)
+- **Interface:** English/German switchable live, light/dark/system theme,
+  zoom 50–200%, a single-row toolbar (whatever doesn't fit moves into the
+  ⋯ overflow menu), a full keyboard-shortcut overview (File → Keyboard
+  shortcuts)
+- **Inspect mode** (Settings): shows the font size next to every paragraph,
+  highlights deviating sizes and spacing and marks deviations right in the
+  text. Useful for finding accidental formatting changes fast
 
-**Im Browser:** ✎Live-URL — nichts zu installieren. Die Seite lädt die App,
-danach passiert alles lokal: Dokumente bleiben als Dateien auf dem eigenen
-Rechner, es gibt keinen Server, kein Konto, keine Telemetrie. Aus Chrome/Edge
-heraus als App installierbar (siehe „Als App installieren“).
+## Get Simplex
 
-**Windows-Desktop:** Installer von der Releases-Seite laden: ✎Releases-URL.
-Beim ersten Start des Installers zeigt Windows „Der Computer wurde durch
-Windows geschützt“ mit „Unbekannter Herausgeber“ (Microsoft Defender
-SmartScreen). Grund: Der Installer ist nicht signiert — ein
-Code-Signing-Zertifikat kostet laufend Geld und steht für ein freies
-Einzelprojekt in keinem Verhältnis. Weg: **„Weitere Informationen“ →
-„Trotzdem ausführen“.** Zum Gegenprüfen nennt jeder Release die
-SHA-256-Prüfsumme des Installers (PowerShell:
-`Get-FileHash .\Simplex_…_x64-setup.exe`).
+**In the browser:** https://lejm4.github.io/simplex/ — nothing to install.
+The page loads the app, after that everything happens locally: documents
+live as files on your own machine, there is no server, no account, no
+telemetry. Installable as an app from Chrome/Edge (see "Install as an
+app").
 
-**Updates:** Die Browser-/PWA-Fassung aktualisiert sich selbst — solange man
-online ist, lädt jeder Neustart automatisch die neueste Version; offline
-startet der zuletzt geladene Stand. Die Desktop-App hat **kein**
-Auto-Update: neue Version = neuen Installer von der Releases-Seite
-ausführen. Einstellungen, „Zuletzt geöffnet“ und Dokumente bleiben dabei
-erhalten (Dokumente sind ohnehin normale Dateien auf der Platte).
+**Windows desktop:** download the installer from the releases page:
+https://github.com/LEJM4/simplex/releases/latest. On first run Windows
+shows "Windows protected your PC" with "Unknown publisher" (Microsoft
+Defender SmartScreen). The reason: the installer isn't signed, and a
+code-signing certificate costs recurring money that is out of proportion
+for a free one-person project. The way through: **"More info" → "Run
+anyway".** To verify the download, every release lists the installer's
+SHA-256 checksum (PowerShell: `Get-FileHash .\Simplex_…_x64-setup.exe`).
 
-## Unterstützte Umgebungen
+**Updates:** the browser/PWA version updates itself. While you are online,
+every restart loads the latest version; offline, the last loaded state
+starts. The desktop app has **no** auto-update: new version = run a new
+installer from the releases page. Settings, the recent-files list and your
+documents survive the update (documents are plain files on disk anyway).
 
-- **Chrome/Edge (primär):** voller Funktionsumfang inkl. echtem
-  Datei-Speichern (File System Access API), PWA-Installation und
-  Datei-Doppelklick bei installierter PWA
-- **Firefox (sekundär):** voll nutzbar mit dokumentierten Fallbacks — Öffnen
-  über die Dateiauswahl, Speichern als Download, keine „Zuletzt
-  geöffnet“-Liste, keine PWA-Dateizuordnung
-- **Windows-Desktop (Tauri-Installer):** voller Funktionsumfang plus native
-  Dialoge, direktes Strg+S auf den Dateipfad, `.bak`-Sicherungskopie und
-  Explorer-Doppelklick; getestet unter Windows 10/11. Nur Windows —
-  macOS/Linux sind aus dem Quelltext baubar, aber ungetestet und ohne
-  fertige Pakete.
-- **Safari:** ungetestet
-- **Rechtschreibung:** nutzt die Wörterbücher des Browsers. Chrome prüft nur
-  Sprachen, die unter *Einstellungen → Sprachen → Rechtschreibprüfung*
-  aktiviert sind — fehlt dort Deutsch, werden deutsche Texte nicht geprüft.
-- **Dark Mode:** gestaltet den App-Rahmen um; das Blatt bleibt bewusst weißes
-  Papier (WYSIWYG für Druck und DOCX)
+## Supported environments
 
-## Dateiformat `.sdoc`
+- **Chrome/Edge (primary):** full feature set including real file saving
+  (File System Access API), PWA install and file double-click with the
+  installed PWA
+- **Firefox (secondary):** fully usable with documented fallbacks — open
+  via the file picker, save as download, no recent-files list, no PWA file
+  association
+- **Windows desktop (Tauri installer):** full feature set plus native
+  dialogs, direct Ctrl+S to the file path, `.bak` backup copy and Explorer
+  double-click; tested on Windows 10/11. Windows only — macOS/Linux build
+  from source but are untested and come without ready-made packages.
+- **Safari:** untested
+- **Spell check:** uses the browser's dictionaries. Chrome only checks
+  languages enabled under *Settings → Languages → Spell check*; if German
+  is missing there, German text won't be checked.
+- **Dark mode:** restyles the app chrome; the sheet deliberately stays
+  white paper (WYSIWYG for print and DOCX)
 
-Eine lesbar formatierte JSON-Datei (UTF-8): `formatVersion`, Metadaten,
-Dokument-Einstellungen (Ränder, Kopf-/Fußzeile, Seitenzahlen, Seitenformat,
-Standardschrift, erste Seite) und der Inhalt als Tiptap-JSON. Bilder liegen
-als Base64 im Dokument. Das ist ein bewusster Tausch: Transparenz — mit
-jedem Texteditor lesbar, diff- und skriptbar, im Notfall ohne Simplex
-rettbar — gegen Dateigröße bei bildlastigen Dokumenten.
+## The `.sdoc` file format
 
-**Format-Versprechen (v1, eingefroren):** `formatVersion: 1` ist seit der
-Veröffentlichung eingefroren — jede künftige Simplex-Version liest
-v1-Dateien. Format-Änderungen kämen nur als neue `formatVersion` mit
-eigener Lese-Weiche; öffnet eine ältere Simplex-Version eine solche Datei,
-sagt sie das klar („stammt aus einer neueren Version, bitte aktualisieren“)
-statt sie fälschlich für ungültig zu erklären. Dateien aus Version 0.3.0
-(ZIP-Container) werden per Magic-Byte-Erkennung weiterhin geöffnet,
-gespeichert wird ausschließlich JSON.
+A readably formatted JSON file (UTF-8): `formatVersion`, metadata, document
+settings (margins, header/footer, page numbers, paper size, default font,
+first page) and the content as Tiptap JSON. Images are stored as Base64
+inside the document. That is a deliberate trade: transparency — readable in
+any text editor, diffable, scriptable, recoverable without Simplex in an
+emergency — against file size for image-heavy documents.
 
-## Erwartungen an den DOCX-Austausch
+**Format promise (v1, frozen):** `formatVersion: 1` is frozen since the
+release; every future Simplex version reads v1 files. Format changes would
+only come as a new `formatVersion` with its own read path. If an older
+Simplex opens such a file, it says so clearly ("comes from a newer version,
+please update") instead of wrongly calling the file invalid. Files from
+version 0.3.0 (ZIP container) still open via magic-byte detection; saving
+is JSON only.
 
-**Export (Simplex → Word):** deckungsgleich mit dem Funktionsumfang —
-Formate, Farben, Schriften, Tabellen, Bilder, Links, Einzüge, Abstände,
-Seitenformat und -ausrichtung, Kopf-/Fußzeile mit Seitenzahlen inklusive
-„Erste Seite anders“ reisen mit.
+## What to expect from DOCX exchange
 
-**Import (Word → Simplex):** Struktur- und Texttreue — Überschriften,
-Listen, Zeichenformate, Tabellen, Bilder, Links, Hoch-/Tiefstellung,
-Einzüge, manuelle Seitenumbrüche und die Standardschrift des Dokuments
-kommen an. Konzeptbedingt verloren gehen: Farben, abweichende
-Schriften/-größen im Text, Absatz-Ausrichtung und das Seitenformat (der
-Import startet als A4 hoch) — ein Dialog weist auf nicht abbildbare
-Formatierungen hin. Kurz: Inhalt ja, pixelgenaues Layout nein.
+**Export (Simplex → Word):** matches the feature set. Formats, colors,
+fonts, tables, images, links, indents, spacing, paper size and orientation,
+header/footer with page numbers including "different first page" all travel
+along.
 
-## Schnellstart (Entwicklung)
+**Import (Word → Simplex):** faithful in structure and text. Headings,
+lists, character formats, tables, images, links, super/subscript, indents,
+manual page breaks and the document's default font arrive. Lost by design:
+colors, deviating fonts and sizes inside the text, paragraph alignment and
+the paper size (imports start as A4 portrait). A dialog points out
+formatting that couldn't be mapped. In short: content yes, pixel-perfect
+layout no.
 
-Voraussetzung: Node.js ≥ 20.19
+## Quick start (development)
+
+Requirement: Node.js ≥ 20.19
 
 ```bash
 npm ci
-npm run dev       # Entwicklung mit Hot-Reload
-npm run build     # Produktions-Build nach dist/
-npm run preview   # gebauten Stand lokal ansehen
+npm run dev       # development with hot reload
+npm run build     # production build to dist/
+npm run preview   # inspect the built state locally
 ```
 
-## Veröffentlichung (GitHub Pages)
+## Deployment (GitHub Pages)
 
-Jeder Push auf `main` läuft durch `.github/workflows/deploy.yml`: erst das
-Test-Gate (beide Suiten müssen grün sein), dann der Build mit einem
-Basis-Pfad, den der Workflow **aus dem Repo-Namen berechnet** (Projekt-Repo
-→ `/<name>/app/`, ein `<user>.github.io`-Repo → `/app/`) — ein
-Repo-Umbenennen braucht keine Code-Änderung. Die Site wird als Landing auf
-der Wurzel plus App unter `/app/` zusammengesetzt und im Pages-Actions-Modus
-deployt (kein `docs/`-Ordner, kein Jekyll). Einmalig im Repo zu prüfen:
-Settings → Pages → Source: **GitHub Actions** (der Workflow versucht das
-Aktivieren selbst). Lokal bleibt alles beim Alten: `npm run build`, der
-Dev-Server und der Desktop-Build laufen auf `/`.
+Every push to `main` runs through `.github/workflows/deploy.yml`: first the
+test gate (both suites must be green), then a build with a base path the
+workflow **computes from the repository name** (project repo →
+`/<name>/app/`, a `<user>.github.io` repo → `/app/`) — renaming the repo
+needs no code change. The site is assembled as the landing page on the root
+plus the app under `/app/` and deployed in Pages' Actions mode (no `docs/`
+folder, no Jekyll). One-time repo check: Settings → Pages → Source:
+**GitHub Actions**. Locally nothing changes: `npm run build`, the dev
+server and the desktop build all run on `/`.
 
-## Als App installieren (PWA)
+## Install as an app (PWA)
 
-Im gebauten Zustand (`npm run build` + `npm run preview` bzw. auf einem
-Webserver) lässt sich Simplex aus Chrome/Edge heraus installieren
-(Adressleiste → „Installieren“): eigenes Fenster, Icon im Startmenü/Dock,
-offline nutzbar. Offline-Fähigkeit greift ab dem zweiten Besuch (der
-Service Worker übernimmt erst nach seiner Installation). Updates: solange
-man online ist, lädt jeder Neustart automatisch die neueste Version
-(Navigation ist network-first — die App kann nicht heimlich veralten).
-Doppelklick auf `.sdoc`-Dateien öffnet die installierte App direkt
-(File-Handling, Chrome/Edge). Im Dev-Server (`npm run dev`) ist der Service
-Worker bewusst deaktiviert.
+In the built state (`npm run build` + `npm run preview`, or on a web
+server) Simplex installs from Chrome/Edge (address bar → "Install"): its
+own window, an icon in the start menu/dock, works offline. Offline
+capability starts with the second visit (the service worker takes over only
+after its installation). Updates: while online, every restart loads the
+latest version (navigation is network-first — the app can't silently go
+stale). Double-clicking `.sdoc` files opens the installed app directly
+(file handling, Chrome/Edge). The service worker is deliberately disabled
+in the dev server (`npm run dev`).
 
-## Desktop-App (Tauri)
+## Desktop app (Tauri)
 
-Dieselbe Codebasis läuft als natives Desktop-Programm (Phase 6e). Einmalige
-Voraussetzungen: **Windows:** Rust über [rustup](https://rustup.rs) und die
-Visual-Studio-Build-Tools („Desktopentwicklung mit C++“); die
-WebView2-Runtime ist auf Windows 10/11 vorinstalliert. **Linux:**
-`build-essential`, `libwebkit2gtk-4.1-dev`, `libssl-dev`. **macOS:** Xcode
-Command Line Tools.
+The same code base runs as a native desktop program. One-time requirements:
+**Windows:** Rust via [rustup](https://rustup.rs) and the Visual Studio
+Build Tools ("Desktop development with C++"); the WebView2 runtime is
+preinstalled on Windows 10/11. **Linux:** `build-essential`,
+`libwebkit2gtk-4.1-dev`, `libssl-dev`. **macOS:** Xcode Command Line Tools.
 
 ```bash
 npm ci
-npm run desktop:dev     # Entwicklung (erster Rust-Build dauert einige Minuten)
-npm run desktop:build   # Installer/Binary → src-tauri/target/release/bundle/
+npm run desktop:dev     # development (the first Rust build takes a few minutes)
+npm run desktop:build   # installer/binary → src-tauri/target/release/bundle/
 ```
 
-Auf dem Desktop laufen Öffnen/Speichern und der DOCX-Austausch über native
-Dialoge, Strg+S schreibt direkt auf den bekannten Pfad, und „Zuletzt
-geöffnet“ übersteht Neustarts (persisted-scope). Doppelklick auf `.sdoc`
-im Datei-Manager öffnet die installierte App (die Zuordnung registriert der
-Installer; auf macOS ist die Übergabe noch nicht verdrahtet — geparkt wie
-die übrigen Mac-Themen); läuft die App bereits, übernimmt das laufende
-Fenster die Datei statt einer zweiten Instanz. Fenstergröße und -position
-werden gemerkt. Der Service Worker ist im Desktop bewusst deaktiviert.
+On the desktop, open/save and the DOCX exchange use native dialogs, Ctrl+S
+writes straight to the known path, and the recent-files list survives
+restarts (persisted scope). Double-clicking `.sdoc` in the file manager
+opens the installed app (the installer registers the association; on macOS
+the hand-over isn't wired yet — parked with the other Mac topics). If the
+app is already running, the existing window takes the file instead of a
+second instance. Window size and position are remembered. The service
+worker is deliberately disabled on the desktop.
 
-**Funktionstest Desktop** (auf dem Zielrechner unter Windows bestätigt,
-2026-07-28 — als Regressions-Checkliste nach Änderungen behalten):
-1. Tippen, Strg+S → nativer Dialog, Datei liegt auf der Platte
-2. App schließen, neu starten → „Zuletzt geöffnet“ vorhanden, Eintrag öffnet
-   ohne Nachfrage
-3. Strg+S auf bekannter Datei → speichert direkt, ohne Dialog
-4. Bild aus dem Explorer ins Dokument ziehen → wird eingefügt
-5. **Strg+P** → nach der Vorschau öffnet sich der System-Druckdialog
-   („Als PDF speichern“ inklusive)
-6. Titelleiste zeigt „• Name – Simplex“ bei ungespeicherten Änderungen
-7. Datei → Als Word exportieren → nativer Dialog, `.docx` entsteht und
-   öffnet in Word
-8. Datei → Word importieren → nativer Dialog, Inhalt erscheint im Editor
-9. (installierte App) Doppelklick auf `.sdoc` im Explorer → App startet
-   mit der Datei; erneuter Doppelklick bei laufender App → dasselbe Fenster
-   wird fokussiert und öffnet die Datei (keine zweite Instanz)
-10. Fenster verschieben/vergrößern, App schließen und neu starten →
-    Geometrie ist wiederhergestellt
+**Desktop function test** (confirmed on the target machine under Windows,
+2026-07-28 — keep as a regression checklist after changes):
 
-## Sprachen
+1. Type, Ctrl+S → native dialog, the file is on disk
+2. Close the app, restart → the recent-files list is there, its entry opens
+   without asking
+3. Ctrl+S on a known file → saves directly, no dialog
+4. Drag an image from Explorer into the document → it is inserted
+5. **Ctrl+P** → after the preview, the system print dialog opens ("Save as
+   PDF" included)
+6. The title bar shows "• Name – Simplex" for unsaved changes
+7. File → Export as Word → native dialog, a `.docx` is created and opens in
+   Word
+8. File → Import Word → native dialog, the content appears in the editor
+9. (installed app) Double-click a `.sdoc` in Explorer → the app starts with
+   the file; a second double-click while it runs → the same window is
+   focused and opens the file (no second instance)
+10. Move/resize the window, close and restart → the geometry is restored
 
-Deutsch ist Standard, Englisch wird parallel gepflegt. Eine weitere Sprache
-ergänzen: Sprachdatei in `src/i18n/` anlegen, in `src/i18n/index.js`
-registrieren, nativen Namen in `src/config/settings.js` eintragen. Ein
-Dev-Check warnt in der Konsole, wenn Keys zwischen den Sprachen fehlen.
+## Languages
 
-## Projektstruktur
+English is the default; German is maintained in parallel and switchable
+live under Settings. Adding another language: create a language file in
+`src/i18n/`, register it in `src/i18n/index.js`, add its native name in
+`src/config/settings.js`. A dev check warns in the console when keys are
+missing between languages.
+
+## Project structure
 
 ```
 src/
-  config/settings.js    alle Tunables — nichts ist hartkodiert
-  core/                 Tiptap-Setup, App-State/Event-Bus, Theme, Extensions
-  i18n/                 t()-Helfer + eine Datei pro Sprache
-  ui/                   Toolbar, Statusleiste, Dialoge, Such-Panel
-  io/                   .sdoc, Autosave, DOCX-Import/-Export, Druck/PDF
-  styles/               App-Chrome, Editor-Blatt, Druck
+  config/settings.js    all tunables — nothing is hardcoded
+  core/                 Tiptap setup, app state/event bus, theme, extensions
+  i18n/                 t() helper + one file per language
+  ui/                   toolbar, status bar, dialogs, search panel
+  io/                   .sdoc, autosave, DOCX import/export, print/PDF
+  styles/               app chrome, editor sheet, print
 ```
 
-## Entwicklungs-Leitplanken
+## Development guardrails
 
-Alle Bibliotheksversionen sind exakt gepinnt (Tiptap 3.29.1, siehe
-`package.json`). Jeder sichtbare UI-Text läuft über `t('key')`. Module
-kommunizieren über den zentralen Event-Bus (`core/appState.js`), nie über
-direkte Querverweise. Undo/Redo läuft ausschließlich über die
-Tiptap-History — kein Feature darf sie umgehen. Änderungen stehen im
-[CHANGELOG](CHANGELOG.md).
+All library versions are pinned exactly (Tiptap 3.29.1, see
+`package.json`). Every visible UI string goes through `t('key')`. Modules
+talk via the central event bus (`core/appState.js`), never through direct
+cross-references. Undo/redo runs exclusively through the Tiptap history —
+no feature may bypass it. Changes are recorded in the
+[CHANGELOG](CHANGELOG.md) (kept in German, the project's working language).
 
-**Performance:** `npm run longdoc` erzeugt ein reproduzierbares Testdokument
-(`beispiele/langtest.sdoc`, ~120 A4-Seiten, 42 000+ Wörter), `npm run bench`
-misst die Hot-Paths (Öffnen, Zählung, Autosave-Snapshot, Suche) headless in
-Node. Die Live-Zählung ist gedrosselt (`settings.statusbar.countUpdateMs`)
-und läuft nur bei Inhaltsänderungen — bei 120 Seiten kostet ein Durchlauf
-rund 4 ms. Die Seitenberechnung liegt im Bench bei 0,39 ms für ein
-vollständiges Dokument (132 Seiten) und 0,01 ms für den Tipp-Fall, weil der
-Scheduler ab der Änderungsstelle rechnet und in die alte Umbruchliste
-konvergiert; die DOM-Messung selbst ist nur im Browser beurteilbar.
+**Performance:** `npm run longdoc` generates a reproducible test document
+(`beispiele/langtest.sdoc`, ~120 A4 pages, 42,000+ words), `npm run bench`
+measures the hot paths (open, counting, autosave snapshot, search) headless
+in Node. The live count is throttled (`settings.statusbar.countUpdateMs`)
+and only runs on content changes; at 120 pages one pass costs about 4 ms.
+Page computation benches at 0.39 ms for a full document (132 pages) and
+0.01 ms for the typing case, because the scheduler starts at the change
+position and converges into the old break list; the DOM measuring itself
+can only be judged in a browser.
 
-**Tests:** `npm run test:pages` prüft headless den Seitenumbruch-Regelkern
-(16 Regelfälle) plus Editor-, DOCX-, Sicherungs-, Seitenformat-, Erste-Seite-
-und Formatgate-Integration (117 Checks gesamt). `npm run test:ui` fährt die
-Chrome-Struktur-Smokes (95 Checks): Toolbar und Statusleiste bauen in de und
-en ohne Konsolenausgabe, jeder Knopf löst sein Kommando am echten Editor aus,
-Dialoge öffnen und schließen, Disabled-Zustände (Undo leer, Einzug-Grenzen,
-Umbruch in Tabellen). Bewusst ohne Layout-Prüfungen — jsdom hat keine
-Layout-Engine, alle Rechtecke sind 0×0. Die Test-Helfer `jsdom` und
-`fake-indexeddb` sind seit 0.29.2 exakt gepinnte devDependencies — `npm ci`
-installiert sie mit, und das Lockfile friert auch ihre transitiven Pakete ein
-(Lehre aus 0.29.0/0.29.1: eine am Prüftag erschienene Version von jsdoms
-Selector-Engine brach den Harness auf frischen Installationen).
+**Tests:** `npm run test:pages` checks the page-break rule core headless
+(16 rule cases) plus editor, DOCX, backups, paper-size, first-page,
+format-gate, pending-marks, margin-click and Pages-base integration (142
+checks in total). `npm run test:ui` runs the chrome structure smokes (98
+checks): toolbar and status bar build in de and en without console output,
+every button fires its command against a real editor, dialogs open and
+close, disabled states hold (empty undo history, indent limits, page breaks
+inside tables). Deliberately no layout checks — jsdom has no layout engine,
+every rect is 0×0. The test helpers `jsdom` and `fake-indexeddb` are
+exactly pinned devDependencies since 0.29.2: `npm ci` installs them, and
+the lockfile freezes their transitive packages too (lesson from
+0.29.0/0.29.1, when a same-day release of jsdom's selector engine broke the
+harness on fresh installs).
 
-## Lizenz
+## License
 
-Simplex ist freie Software unter der **GNU General Public License v3.0**
-(siehe [LICENSE](LICENSE)): nutzen, studieren, ändern und weitergeben ist
-ausdrücklich erwünscht — wer Simplex (auch verändert) weitergibt, muss den
-Quelltext unter derselben Lizenz verfügbar machen.
+Simplex is free software under the **GNU General Public License v3.0**
+(see [LICENSE](LICENSE)): using, studying, changing and passing it on is
+explicitly welcome. Whoever distributes Simplex, modified or not, must make
+the source available under the same license.
 
-Copyright (C) 2026 ✎Name
+Copyright (C) 2026 LEJM4
 
-Alle eingesetzten Bibliotheken stehen unter permissiven, GPL-kompatiblen
-Lizenzen (MIT, BSD-2-Clause, ISC, Apache-2.0).
+All libraries used are under permissive, GPL-compatible licenses (MIT,
+BSD-2-Clause, ISC, Apache-2.0).
