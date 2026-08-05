@@ -1,0 +1,1309 @@
+/* src/styles/app.css
+   ---------------------------------------------------------------------------
+   Application chrome: design tokens, layout frame, toolbar, status bar.
+   Design direction: "Papier & Tinte" — a calm stone-grey workbench, a white
+   A4 sheet as the hero, emerald ink as the only accent (palette taken from
+   the simplex website: #0e6e5a / lift #13836b). The chrome stays quiet;
+   the document carries the personality (serif content type via settings.js).
+
+   Page metrics and content typography are injected from settings.js at boot:
+   --page-width, --page-min-height, --page-margin-*,
+   --content-font-family, --content-font-size, --content-line-height
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* Color tokens, light theme. The [data-theme='dark'] block below overrides
+     the CHROME tokens only — see the note at the --color-ink-* group. */
+  --color-workspace: #e3e4e0;      /* stone: the workbench around the sheet */
+  --color-surface: #fafaf8;        /* chrome surfaces (toolbar, status bar) */
+  --color-page: #ffffff;           /* the paper itself (constant, both themes) */
+  --color-elevated: #ffffff;       /* floating chrome: popovers, dialogs, inputs */
+  --color-border: #d2d2cc;
+  --color-text: #26251f;           /* near-black ink */
+  --color-text-muted: #8b887e;
+  --color-accent: #0e6e5a;         /* emerald ink (website --green) */
+  --color-accent-hover: #13836b;   /* primary buttons on :hover (website --green-lift) */
+  --color-accent-contrast: #ffffff;/* text ON accent surfaces */
+  --color-selection: rgba(14, 110, 90, 0.2);
+  --color-accent-soft: rgba(14, 110, 90, 0.4);  /* fine rings on active controls */
+  --color-accent-wash: rgba(14, 110, 90, 0.08); /* faint ink wash on hover */
+  --color-button-hover: #ecebe6;
+  --color-danger: #b3372c;         /* destructive menu entries */
+  --color-overlay: rgba(38, 37, 31, 0.35);      /* modal backdrop */
+  --color-swatch-border: rgba(38, 37, 31, 0.18);/* color swatches / color bar */
+
+  /* Content-side tokens ("ink"): everything rendered ON or floating OVER the
+     sheet uses these (editor.css). The sheet stays white paper in dark mode,
+     so these are deliberately NOT overridden by the dark theme. */
+  --color-ink: #000000;
+  --color-ink-muted: #8b887e;
+  --color-ink-border: #d2d2cc;
+  --color-ink-accent: #0e6e5a;
+  --color-ink-hover: #ecebe6;
+
+  /* Select chevron (0.24.2): own arrow because appearance:none — encoded
+     per theme, muted text color. Same Lucide chevron as icons.chevronDown. */
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b887e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --shadow-page:
+    0 1px 2px rgba(38, 37, 31, 0.12),
+    0 6px 24px rgba(38, 37, 31, 0.1);
+  --shadow-popover: 0 8px 24px rgba(38, 37, 31, 0.16);
+  --shadow-panel: 0 12px 36px rgba(38, 37, 31, 0.22);
+  --shadow-dialog: 0 16px 48px rgba(38, 37, 31, 0.25);
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    sans-serif;
+
+  --toolbar-height: 60px;
+  --statusbar-height: 36px;
+}
+
+/* Dark theme: restyles the app chrome only — the sheet, its content and the
+   print pages stay white paper ("Papier & Tinte" also means: paper is paper).
+   data-theme is set pre-paint by the inline script in index.html and at
+   runtime by core/theme.js, which also keeps style.colorScheme in sync
+   (native selects, checkboxes and scrollbars). */
+:root[data-theme='dark'] {
+  --color-workspace: #1e1f22;
+  --color-surface: #2a2b2e;
+  --color-elevated: #333438;
+  --color-border: #47484d;
+  --color-text: #e9e7e0;
+  --color-text-muted: #a3a094;
+  --color-accent: #5fc9aa;          /* brighter emerald for dark contrast */
+  --color-accent-hover: #79d5ba;
+  --color-accent-contrast: #0c2620; /* dark ink on the light-emerald button */
+  --color-accent-soft: rgba(95, 201, 170, 0.5);
+  --color-accent-wash: rgba(95, 201, 170, 0.12);
+  --color-button-hover: #3b3d42;
+  --color-danger: #e08c81;
+  --color-overlay: rgba(0, 0, 0, 0.55);
+  --color-swatch-border: rgba(255, 255, 255, 0.25);
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a094' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  --shadow-page:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 8px 28px rgba(0, 0, 0, 0.45);
+  --shadow-popover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-panel: 0 12px 36px rgba(0, 0, 0, 0.55);
+  --shadow-dialog: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  /* No rubber-banding: the chrome must never bounce away from the edges. */
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--color-text);
+  background: var(--color-workspace);
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Toolbar ------------------------------------------------------------- */
+
+.toolbar {
+  flex: none;
+  display: flex;
+  flex-wrap: nowrap; /* one line, always — what doesn't fit goes into the ⋯ menu */
+  align-items: center;
+  /* Fill the full width: free space goes into the gaps BETWEEN the sections
+     (first section flush left, last flush right). Wrapping into a second
+     row stays impossible — the 0.22 problem was wrap, not distribution. */
+  justify-content: space-between;
+  min-height: var(--toolbar-height);
+  padding: 8px 14px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Layout unit of the one-line logic: [separator?, group]. Sections never
+   shrink — the overflow controller in ui/toolbar.js decides what leaves. */
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.toolbar-group {
+  display: flex;
+  /* Mixed heights share one visual line: 34px selects/inputs next to 40px
+     buttons. Without this, stretch acts as flex-start for definite-height
+     items — fields would stick to the top of the tallest button. */
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.toolbar-button:hover:not(:disabled) {
+  background: var(--color-accent-wash); /* a whisper of ink instead of gray */
+}
+
+.toolbar-button:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.toolbar-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.toolbar-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Workspace + A4 sheet -------------------------------------------------- */
+
+.workspace {
+  flex: 1 1 auto;
+  overflow: auto;
+  /* Scrolling ends at the document edges — no chaining into the chrome. */
+  overscroll-behavior: contain;
+  padding: 32px 16px 64px;
+}
+
+.page {
+  position: relative; /* anchor for the page-view sheet overlays */
+  overflow: hidden;   /* full-bleed spacers must never poke out of the sheet */
+  display: flex;
+  flex-direction: column;
+  width: var(--page-width);
+  min-height: var(--page-min-height);
+  margin: 0 auto;
+  padding: var(--page-margin-top) var(--page-margin-right)
+    var(--page-margin-bottom) var(--page-margin-left);
+  background: var(--color-page);
+  color: var(--color-ink); /* ink on paper — content color never follows the chrome theme */
+  border-radius: 2px;
+  box-shadow: var(--shadow-page);
+  cursor: text;
+}
+
+/* Status bar ------------------------------------------------------------ */
+
+.statusbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--statusbar-height);
+  padding: 0 12px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Toolbar: phase-1 controls -------------------------------------------------
+   Separators, active states, selects, color buttons and the palette popover. */
+
+.toolbar-separator {
+  width: 1px;
+  align-self: stretch;
+  margin: 3px 10px;
+  background: var(--color-border);
+}
+
+.toolbar-button.is-active {
+  background: var(--color-selection);
+  color: var(--color-accent);
+  /* Explicit ring so an active format reads at a glance, not only by tint. */
+  box-shadow: inset 0 0 0 1px var(--color-accent-soft);
+}
+
+.toolbar-select {
+  height: 34px;
+  /* Fixed room for OUR chevron — text can never run under the arrow; long
+     font names ellipsize instead. The native select lets its built-in arrow
+     and the text collide once max-width bites. */
+  padding: 0 26px 0 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  appearance: none;
+  background-color: var(--color-elevated);
+  background-image: var(--select-arrow);
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  background-size: 14px 14px;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.toolbar-select--font {
+  max-width: 140px;
+}
+
+.toolbar-select--size {
+  width: 56px;
+}
+
+.toolbar-input--size {
+  width: 64px;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  text-align: center;
+}
+
+.toolbar-input--size:hover {
+  border-color: var(--color-accent-soft);
+}
+
+.toolbar-input--size:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Native spinners off — stepping runs through the A−/A+ buttons. */
+/* Font-size combobox (0.23.1, integrated in 0.24.0): number input and the
+   ▾ preset opener share ONE bordered field — same combobox look as the
+   font select with its native arrow. */
+.toolbar-sizebox {
+  align-items: center;
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-elevated);
+}
+
+.toolbar-sizebox:hover {
+  border-color: var(--color-accent-soft);
+}
+
+.toolbar-sizebox:focus-within {
+  border-color: var(--color-accent);
+}
+
+.toolbar-sizebox:has(:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.toolbar-sizebox .toolbar-input--size {
+  width: 42px;
+  height: 100%;
+  padding: 0 0 0 4px;
+  border: none;
+  border-radius: 4px 0 0 4px;
+  background: transparent;
+  appearance: textfield; /* Firefox: no native number spinners */
+  -moz-appearance: textfield;
+}
+
+/* Chrome/Edge/Safari draw their own stepper pair on number inputs — off:
+   A−/A+ (and Ctrl+8/9) already cover stepping, the ▾ next door serves the
+   presets. Arrow keys in the field keep stepping (independent of the
+   visual spinner). */
+.toolbar-input--size::-webkit-outer-spin-button,
+.toolbar-input--size::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.toolbar-sizebox .toolbar-input--size:focus-visible {
+  outline: none; /* the box carries the focus ring */
+}
+
+.toolbar-button--compact {
+  width: 20px;
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  color: var(--color-text-muted);
+}
+
+.toolbar-button--compact:hover:not(:disabled) {
+  color: var(--color-text);
+}
+
+.toolbar-button--compact svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Compact stage (0.24.0): one notch smaller before anything has to leave
+   for the ⋯ menu — toggled by the fit logic in ui/toolbar.js. Also applies
+   inside the overflow panel (it lives in the toolbar root). */
+.toolbar--compact {
+  padding: 6px 10px;
+}
+
+.toolbar--compact .toolbar-button {
+  width: 34px;
+  height: 34px;
+}
+
+/* The 34px compact width must not squeeze the text trigger ("Datei") — its
+   label would overflow the box to the right and read as left-aligned. */
+.toolbar--compact .toolbar-menu-trigger {
+  width: auto;
+  padding: 0 10px;
+}
+
+.toolbar--compact .toolbar-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.toolbar--compact .toolbar-group {
+  gap: 2px;
+}
+
+.toolbar--compact .toolbar-separator {
+  margin: 3px 6px;
+}
+
+.toolbar--compact .toolbar-select,
+.toolbar--compact .toolbar-sizebox {
+  height: 30px;
+}
+
+.toolbar--compact .toolbar-select--font {
+  max-width: 116px;
+}
+
+.toolbar--compact .toolbar-sizebox .toolbar-input--size {
+  width: 36px;
+}
+
+.toolbar--compact .toolbar-button--compact {
+  width: 18px;
+  height: 100%;
+}
+
+.toolbar-popover--sizes {
+  min-width: 76px;
+}
+
+.toolbar-popover--sizes .toolbar-popover-option {
+  font-variant-numeric: tabular-nums;
+}
+
+.toolbar-input--size::-webkit-inner-spin-button,
+.toolbar-input--size::-webkit-outer-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.toolbar-select:hover {
+  border-color: var(--color-accent-soft);
+}
+
+.toolbar-select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Color buttons: icon sits slightly higher, a color bar shows the current
+   value of the selection (text color / highlight). */
+
+.toolbar-button--color {
+  position: relative;
+}
+
+.toolbar-button--color svg {
+  margin-top: -4px;
+}
+
+.toolbar-color-bar {
+  position: absolute;
+  left: 7px;
+  right: 7px;
+  bottom: 5px;
+  height: 4px;
+  border-radius: 2px;
+  border: 1px solid var(--color-swatch-border);
+  background: currentColor;
+  pointer-events: none;
+}
+
+/* Palette popover */
+
+.toolbar-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.toolbar-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  padding: 8px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-popover);
+  /* Small windows: scroll instead of running past the bottom edge. */
+  max-height: calc(100vh - var(--toolbar-height) - 24px);
+  overflow-y: auto;
+}
+
+.toolbar-popover-option--danger {
+  color: var(--color-danger);
+}
+
+.toolbar-popover-reset {
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.toolbar-popover-reset:hover {
+  background: var(--color-button-hover);
+}
+
+.toolbar-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 6px;
+}
+
+.toolbar-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--color-swatch-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toolbar-swatch:hover {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.toolbar-swatch.is-active {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.toolbar-popover-reset:focus-visible,
+.toolbar-swatch:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Popover menu entries (spacing dropdown) */
+
+.toolbar-popover-label {
+  display: block;
+  margin: 8px 2px 3px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.toolbar-popover-label:first-child {
+  margin-top: 0;
+}
+
+.toolbar-popover-option {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.toolbar-popover-option:hover {
+  background: var(--color-button-hover);
+}
+
+.toolbar-popover-option.is-active {
+  background: var(--color-selection);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.toolbar-popover-option:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+/* File menu ---------------------------------------------------------------- */
+
+.toolbar-menu-trigger {
+  width: auto;
+  padding: 0 14px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.toolbar-popover--menu {
+  min-width: 220px;
+}
+
+.toolbar-popover--menu .toolbar-popover-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 24px;
+}
+
+.menu-shortcut {
+  color: var(--color-text-muted);
+  font-size: 11.5px;
+}
+
+.menu-empty {
+  display: block;
+  padding: 5px 8px;
+  color: var(--color-text-muted);
+  font-size: 12.5px;
+  font-style: italic;
+}
+
+/* Status bar: file segment -------------------------------------------------- */
+
+.statusbar-file {
+  margin-right: 16px;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+.statusbar-status {
+  flex: 1 1 auto;
+}
+
+/* Modal dialog --------------------------------------------------------------- */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-overlay);
+}
+
+.dialog {
+  width: min(420px, calc(100vw - 48px));
+  padding: 20px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-dialog);
+  font-family: var(--font-ui);
+}
+
+.dialog-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.dialog-message {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dialog-button {
+  padding: 7px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dialog-button:hover {
+  background: var(--color-button-hover);
+}
+
+.dialog-button--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.dialog-button--primary:hover {
+  background: var(--color-accent-hover);
+}
+
+.dialog-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Spacing dropdown: free-value row --------------------------------------- */
+
+.toolbar-popover-inputrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 6px;
+}
+
+.toolbar-popover-input {
+  width: 72px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.toolbar-popover-inputrow.is-active .toolbar-popover-input {
+  border-color: var(--color-accent);
+}
+
+.toolbar-popover-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.toolbar-popover-unit {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.toolbar-popover-apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.toolbar-popover-apply:hover {
+  background: var(--color-button-hover);
+}
+
+/* File menu separator ------------------------------------------------------ */
+
+.menu-separator {
+  margin: 4px 6px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Status bar: zoom (Word-style: − slider + percent, percent = reset) ------- */
+
+.statusbar-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 18px;
+}
+
+.statusbar-zoom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.statusbar-zoom-button:hover:not(:disabled) {
+  background: var(--color-button-hover);
+}
+
+.statusbar-zoom-button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.statusbar-zoom-slider {
+  width: 120px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.statusbar-zoom-value {
+  min-width: 56px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  cursor: pointer;
+}
+
+.statusbar-zoom-value:hover {
+  background: var(--color-button-hover);
+}
+
+/* Page-setup dialog ---------------------------------------------------------- */
+
+.dialog--form {
+  width: min(460px, calc(100vw - 48px));
+}
+
+.dialog-section-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.dialog-margin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin-bottom: 16px;
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+}
+
+.dialog-field span {
+  color: var(--color-text-muted);
+}
+
+.dialog-field--wide {
+  margin-bottom: 12px;
+}
+
+.dialog-input {
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.dialog-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Greyed while a controlling toggle is off (number position while numbers
+   are off, first-page texts while the flag is off). */
+.dialog-input:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+select.dialog-input {
+  cursor: pointer;
+}
+
+/* Settings dialog: two stacked selects — slimmer than the page-setup form. */
+.dialog--settings {
+  width: min(360px, calc(100vw - 48px));
+}
+
+/* Keyboard-shortcuts dialog ------------------------------------------------- */
+
+.dialog--shortcuts {
+  width: min(560px, calc(100vw - 48px));
+}
+
+.shortcuts-body {
+  max-height: min(560px, 62vh);
+  overflow-y: auto;
+  margin: 0 -6px 16px;
+  padding: 0 6px;
+}
+
+.shortcuts-body:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+.shortcuts-section {
+  margin: 0 0 16px;
+}
+
+.shortcuts-section:last-child {
+  margin-bottom: 0;
+}
+
+.shortcuts-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 4px 2px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.shortcuts-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.shortcuts-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.shortcuts-or {
+  margin: 0 5px;
+}
+
+.shortcuts-kbd {
+  display: inline-block;
+  min-width: 21px;
+  padding: 2px 7px;
+  border: 1px solid var(--color-border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+.dialog-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dialog-checkbox input {
+  accent-color: var(--color-accent);
+}
+
+/* Table size picker ----------------------------------------------------------- */
+
+.toolbar-table-grid {
+  display: grid;
+  gap: 3px;
+  padding: 4px 8px;
+}
+
+.toolbar-table-cell {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  background: var(--color-elevated);
+  cursor: pointer;
+  padding: 0;
+}
+
+.toolbar-table-cell.is-hot {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.toolbar-table-size {
+  display: block;
+  padding: 2px 8px 6px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Find & replace panel ------------------------------------------------------ */
+
+.search-panel {
+  position: fixed;
+  top: calc(var(--toolbar-height) + 12px);
+  right: 24px;
+  z-index: 80;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  width: 380px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-elevated);
+  box-shadow: var(--shadow-panel);
+  font-family: var(--font-ui);
+}
+
+.search-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-panel-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-elevated);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.search-panel-input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.search-panel-count {
+  min-width: 68px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.search-panel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.search-panel-button:hover {
+  background: var(--color-button-hover);
+}
+
+.search-panel-textbutton {
+  padding: 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.search-panel-textbutton:hover {
+  background: var(--color-button-hover);
+}
+
+.search-panel-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.search-panel-option input {
+  accent-color: var(--color-accent);
+}
+
+/* Backups dialog (feature 1, 0.25.0) --------------------------------------- */
+
+.dialog-hint--lead {
+  margin: 0 0 14px;
+}
+
+.dialog-backup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.dialog-backup-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dialog-backup-item:hover {
+  border-color: var(--color-accent-soft);
+}
+
+.dialog-backup-item.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-accent-wash);
+}
+
+.dialog-backup-item input {
+  margin: 0;
+  flex: none;
+  accent-color: var(--color-accent);
+}
+
+.dialog-backup-time {
+  display: block;
+  font-weight: 600;
+}
+
+.dialog-backup-meta {
+  display: block;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* Status bar: page view --------------------------------------------------- */
+
+.statusbar-pageinfo {
+  margin-right: 16px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusbar-pageinfo:empty {
+  display: none;
+}
+
+/* Pages ↔ continuous: segmented switch next to the zoom (0.23.0). */
+.statusbar-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: 14px;
+  padding: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: var(--color-elevated);
+}
+
+.statusbar-segment-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 22px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.statusbar-segment-button:hover {
+  background: var(--color-button-hover);
+}
+
+.statusbar-segment-button.is-active {
+  background: var(--color-selection);
+  color: var(--color-accent);
+}
+
+.statusbar-segment-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Toolbar overflow (0.23.0): the ⋯ button sits at the right edge; the
+   panel stacks the collapsed sections as rows. Controls are the ORIGINAL
+   elements — nested dropdowns open inside, so no clipping here. */
+
+.toolbar-overflow {
+  /* Last flex child — space-between pins it to the right edge. */
+  padding-left: 8px;
+}
+
+.toolbar-overflow[hidden] {
+  display: none;
+}
+
+.toolbar-popover--overflow {
+  left: auto;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-height: none;
+  overflow: visible;
+}
+
+.toolbar-popover--overflow[hidden] {
+  display: none;
+}
+
+.toolbar-popover--overflow .toolbar-separator {
+  display: none; /* sections stack as rows — no vertical rules needed */
+}
+
+/* Status bar: word count + spellcheck toggle -------------------------------- */
+
+.statusbar-counts {
+  margin-right: 16px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.statusbar-zoom-button.is-active {
+  color: var(--color-accent);
+}
+
+/* Small explanatory line under a dialog control (settings dialog). */
+.dialog-hint {
+  margin: -8px 0 16px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
+/* Link bubble (phase 7a) -------------------------------------------------- */
+
+.link-bubble {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-popover);
+  font-size: 13px;
+}
+
+.link-bubble-url {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 3px 6px;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+a.link-bubble-url:hover {
+  text-decoration: underline;
+}
+
+.link-bubble-button {
+  border: none;
+  border-radius: 4px;
+  padding: 3px 8px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.link-bubble-button:hover {
+  background: var(--color-button-hover);
+}
+
+/* Shared dialog extras (phase 7a) ------------------------------------------ */
+
+.dialog-error {
+  margin: 6px 0 0;
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
+.dialog-button--danger {
+  color: var(--color-danger);
+}

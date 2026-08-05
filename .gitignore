@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+# Generiertes Perf-Testdokument (npm run longdoc)
+beispiele/langtest.sdoc
+
+# Betriebssystem-Reste
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="icon.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <!-- Browser/titlebar tint. Initial value set by the inline script below;
+         core/theme.js keeps it in sync with the in-app theme afterwards. -->
+    <meta name="theme-color" content="#fafaf8" />
+    <!-- Brand name only (not translatable UI text); overwritten at boot from settings.app.name -->
+    <title>Simplex</title>
+    <script>
+      // Anti-flash: apply the persisted theme BEFORE the first paint.
+      // The storage key literal must match settings.view.themeKey
+      // (src/config/settings.js); runtime switching lives in src/core/theme.js.
+      (function () {
+        var preference = null;
+        try { preference = localStorage.getItem('simplex:theme'); } catch (e) {}
+        if (preference !== 'light' && preference !== 'dark') {
+          preference = window.matchMedia('(prefers-color-scheme: dark)').matches
+            ? 'dark'
+            : 'light';
+        }
+        document.documentElement.dataset.theme = preference;
+        document.documentElement.style.colorScheme = preference;
+        // Surface colors mirror app.css (--color-surface light/dark).
+        document
+          .querySelector('meta[name="theme-color"]')
+          .setAttribute('content', preference === 'dark' ? '#2a2b2e' : '#fafaf8');
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app" class="app">
+      <header id="toolbar" class="toolbar" role="toolbar"></header>
+      <main id="workspace" class="workspace">
+        <div id="page" class="page">
+          <div id="editor" class="editor"></div>
+        </div>
+      </main>
+      <footer id="statusbar" class="statusbar" role="status"></footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

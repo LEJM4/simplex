@@ -1,0 +1,241 @@
+/* src/styles/print.css
+   ---------------------------------------------------------------------------
+   Print/PDF via paged.js (phase 3).
+   - .print-root: full-screen preview overlay; paged.js renders real pages
+     into .print-pages. Dynamic @page rules (size, margins, header/footer)
+     come from io/pdfPrint.js as a generated stylesheet.
+   - Content typography inside the pages mirrors editor.css and reuses the
+     same CSS variables, so print output follows the document defaults.
+   - @media print hides the app and the overlay chrome; only pages remain.
+   --------------------------------------------------------------------------- */
+
+.print-root {
+  position: fixed;
+  inset: 0;
+  z-index: 90; /* below dialogs (100) */
+  overflow: auto;
+  padding: 32px 16px;
+  background: var(--color-workspace);
+}
+
+.print-status {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-elevated);
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  color: var(--color-text);
+  box-shadow: 0 8px 24px rgba(38, 37, 31, 0.18);
+}
+
+.print-close {
+  position: fixed;
+  top: 16px;
+  right: 24px;
+  padding: 7px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-elevated);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--color-text);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(38, 37, 31, 0.15);
+}
+
+.print-close:hover {
+  background: var(--color-button-hover);
+}
+
+/* Pages as rendered by paged.js -------------------------------------------- */
+
+.print-root .pagedjs_page {
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(38, 37, 31, 0.18);
+  margin: 0 auto 20px;
+}
+
+/* Content typography inside pages — mirror of editor.css ------------------- */
+
+.print-root .pagedjs_page_content {
+  font-family: var(--content-font-family);
+  font-size: var(--content-font-size);
+  line-height: var(--content-line-height);
+  font-variant-numeric: lining-nums; /* mirrors editor.css */
+  color: var(--color-ink); /* same ink as the editor sheet (app.css) */
+}
+
+.print-root .pagedjs_page_content p {
+  margin: 0 0 var(--content-paragraph-spacing);
+}
+
+.print-root .pagedjs_page_content sub,
+.print-root .pagedjs_page_content sup {
+  line-height: 1;
+}
+
+.print-root .pagedjs_page_content a {
+  color: var(--color-ink-accent);
+  text-decoration: underline;
+}
+
+.print-root .pagedjs_page_content h1,
+.print-root .pagedjs_page_content h2,
+.print-root .pagedjs_page_content h3 {
+  margin: 1.2em 0 0.5em;
+  line-height: 1.25;
+}
+
+.print-root .pagedjs_page_content h1 { font-size: 1.9em; }
+.print-root .pagedjs_page_content h2 { font-size: 1.5em; }
+.print-root .pagedjs_page_content h3 { font-size: 1.25em; }
+
+.print-root .pagedjs_page_content ul,
+.print-root .pagedjs_page_content ol {
+  margin: 0 0 var(--content-paragraph-spacing);
+  padding-left: 1.5em;
+}
+
+.print-root .pagedjs_page_content li p {
+  margin: 0;
+}
+
+.print-root .pagedjs_page_content blockquote {
+  margin: 0.8em 0;
+  padding-left: 0.9em;
+  border-left: 3px solid #cccccc;
+}
+
+.print-root .pagedjs_page_content code {
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  background: rgba(38, 37, 31, 0.06);
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.print-root .pagedjs_page_content pre {
+  margin: 0.8em 0;
+  padding: 0.7em 0.9em;
+  border-radius: 6px;
+  background: rgba(38, 37, 31, 0.06);
+  overflow-x: auto;
+}
+
+.print-root .pagedjs_page_content hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid #cccccc;
+}
+
+.print-root .pagedjs_page_content mark {
+  background: #f9e37b;
+  border-radius: 2px;
+  padding: 0 0.06em;
+  color: inherit;
+}
+
+/* Printing ------------------------------------------------------------------ */
+
+@media print {
+  body {
+    background: none;
+  }
+
+  /* Only the paged output leaves the printer. */
+  #app {
+    display: none !important;
+  }
+
+  .print-root {
+    position: static;
+    overflow: visible;
+    padding: 0;
+    background: none;
+  }
+
+  .print-status,
+  .print-close {
+    display: none !important;
+  }
+
+  .print-root .pagedjs_page {
+    box-shadow: none;
+    margin: 0;
+  }
+}
+
+/* Images (serialized <img> with data-attributes) ---------------------------- */
+
+.print-root .pagedjs_page_content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.print-root .pagedjs_page_content img[data-align='center'] {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.print-root .pagedjs_page_content img[data-align='left'] {
+  display: block;
+  margin-right: auto;
+}
+
+.print-root .pagedjs_page_content img[data-align='right'] {
+  display: block;
+  margin-left: auto;
+}
+
+.print-root .pagedjs_page_content img[data-float='left'] {
+  float: left;
+  margin: 4px 16px 8px 0;
+}
+
+.print-root .pagedjs_page_content img[data-float='right'] {
+  float: right;
+  margin: 4px 0 8px 16px;
+}
+
+/* Tables ---------------------------------------------------------------------- */
+
+.print-root .pagedjs_page_content table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.print-root .pagedjs_page_content td,
+.print-root .pagedjs_page_content th {
+  border: 1px solid #b8b5ac;
+  padding: 6px 9px;
+  vertical-align: top;
+}
+
+.print-root .pagedjs_page_content th {
+  background: rgba(38, 37, 31, 0.05);
+  font-weight: 600;
+  text-align: left;
+}
+
+.print-root .pagedjs_page_content tr {
+  break-inside: avoid;
+}
+
+/* Manual page break (phase 7c): in print the node is pure chunk steering —
+   the forcing rule lives in the GENERATED sheet (io/pdfPrint.js), this only
+   makes sure no visible residue remains on the page. */
+.print-root .pagedjs_page_content [data-sw-page-break] {
+  display: block;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}

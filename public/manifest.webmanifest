@@ -1,0 +1,24 @@
+{
+  "name": "Simplex",
+  "short_name": "Simplex",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "de",
+  "description": "Schlanker Word-Ersatz: schreiben, formatieren, lokal speichern, DOCX austauschen, als PDF drucken — offline, ohne Cloud, ohne Anmeldung.",
+  "background_color": "#fafaf8",
+  "theme_color": "#fafaf8",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": { "application/json": [".sdoc", ".sim", ".swdoc"] }
+    }
+  ]
+}

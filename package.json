@@ -1,0 +1,52 @@
+{
+  "name": "simplex",
+  "private": true,
+  "version": "0.33.0",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "description": "Schlanker Word-Ersatz als lokale Web- und Desktop-App (Simplex)",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "longdoc": "node scripts/generate-longdoc.mjs",
+    "bench": "node scripts/bench-longdoc.mjs",
+    "test:pages": "node scripts/test-pagination.mjs",
+    "test:ui": "node scripts/test-ui.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.11.1",
+    "@tauri-apps/plugin-dialog": "2.7.2",
+    "@tauri-apps/plugin-fs": "2.5.1",
+    "@tiptap/core": "3.29.1",
+    "@tiptap/extension-highlight": "3.29.1",
+    "@tiptap/extension-image": "3.29.1",
+    "@tiptap/extension-subscript": "3.29.1",
+    "@tiptap/extension-superscript": "3.29.1",
+    "@tiptap/extension-table": "3.29.1",
+    "@tiptap/extension-text-align": "3.29.1",
+    "@tiptap/extension-text-style": "3.29.1",
+    "@tiptap/extension-typography": "3.29.1",
+    "@tiptap/extensions": "3.29.1",
+    "@tiptap/pm": "3.29.1",
+    "@tiptap/starter-kit": "3.29.1",
+    "docx": "9.7.1",
+    "fflate": "0.8.3",
+    "idb": "8.0.3",
+    "mammoth": "1.12.0",
+    "pagedjs": "0.4.3"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4",
+    "fake-indexeddb": "6.2.5",
+    "jsdom": "30.0.1",
+    "vite": "8.1.5"
+  }
+}

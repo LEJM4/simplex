@@ -1,0 +1,89 @@
+# .github/workflows/deploy.yml
+# ---------------------------------------------------------------------------
+# GitHub Pages deployment (release point 11). Every push to main runs the
+# full test gate, builds the app with a base path COMPUTED from the repo
+# name, assembles the site (landing on root, app under /app/) and deploys
+# via the Pages Actions mode — no docs/ folder, no Jekyll involved.
+#
+# Base-path rule: regular project repo → /<name>/app/; a <user>.github.io
+# repo → /app/. A future custom domain serves the project at the domain
+# root, so its base is /app/ too — flip the else-branch below if that day
+# comes. Renaming the repo needs NO code change: the next run recomputes.
+#
+# Action versions source-verified against GitHub's own starter workflows
+# (actions/starter-workflows, pages/static.yml) on 2026-08-05.
+# ---------------------------------------------------------------------------
+name: Deploy (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time; never abort a run that is already live-swapping.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exactly from the lockfile
+        run: npm ci
+
+      - name: Test gate — both suites must be green
+        run: |
+          npm run test:pages
+          npm run test:ui
+
+      - name: Compute the base path from the repository name
+        id: base
+        run: |
+          NAME="${{ github.event.repository.name }}"
+          if [[ "$NAME" == *.github.io ]]; then
+            echo "base=/app/" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=/$NAME/app/" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the app against the Pages base
+        run: npm run build
+        env:
+          SIMPLEX_BASE: ${{ steps.base.outputs.base }}
+
+      - name: Assemble the site — landing on root, app under /app/
+        run: |
+          mkdir -p _site/app
+          cp -r dist/. _site/app/
+          cp -r landing/. _site/
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

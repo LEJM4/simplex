@@ -1,0 +1,31 @@
+[package]
+name = "simplex"
+version = "0.33.0"
+description = "Schlanker Word-Ersatz als lokale Desktop-App (Simplex)"
+edition = "2021"
+rust-version = "1.77.2"
+
+# Versions pinned exactly (project rule) — resolved 2026-07-28 from crates.io.
+# Transitive dependencies are pinned by Cargo.lock after the first build.
+
+[lib]
+name = "simplex_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.6.3", features = [] }
+
+[dependencies]
+tauri = { version = "=2.11.5", features = [] }
+tauri-plugin-dialog = "=2.7.2"
+tauri-plugin-fs = "=2.5.1"
+tauri-plugin-persisted-scope = "=2.3.7"
+tauri-plugin-single-instance = "=2.4.3"
+tauri-plugin-window-state = "=2.4.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
