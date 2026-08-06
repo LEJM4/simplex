@@ -1,528 +1,425 @@
-<!doctype html>
-<!-- Simplex landing page (release point 12, English since the language
-     switch). Design rules:
-       - pure HTML/CSS in ONE self-contained file. No framework, no build
-         step, no external requests (fonts, scripts, styles all inline);
-         that keeps the privacy line in the footer literally true.
-       - every URL is either relative to this site (starts with ./) or an
-         absolute https:// link to the GitHub repo. External links MUST
-         carry the full protocol, or the browser resolves them as paths on
-         this Pages site (hello, 404).
-       - the two screenshot slots ship with inline SVG illustrations of the
-         real UI; swap them for PNG screenshots by replacing the <svg> with
-         <img src="…"> inside the marked <figure> blocks. Nothing else
-         references them.
-       - the page lives OUTSIDE the service worker's scope (the app's base
-         directory), so it always loads fresh from the network.
-       - the app itself ships German and English; this page is English as
-         the project's public main language. -->
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Simplex — a lean word processor. Offline, no cloud.</title>
-    <meta
-      name="description"
-      content="Simplex is a lean replacement for Word: write, format, save to your own disk, exchange DOCX and print to PDF. Works offline, no cloud, no account. Free and open source (GPL-3.0)."
-    />
-    <meta name="theme-color" content="#08382f" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308382f'/%3E%3Crect x='8' y='6' width='16' height='20' rx='2' fill='%23fafaf8'/%3E%3Cpath d='M11 11h10M11 15h10M11 19h6' stroke='%230e6e5a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
-    />
-    <style>
-      :root {
-        --paper: #fafaf8;
-        --ink: #10312a;
-        --ink-soft: #43635b;
-        --emerald: #0e6e5a;
-        --emerald-hover: #13836b;
-        --deep: #08382f;
-        --deep-2: #0b4a3d;
-        --mint: #5fc9aa;
-        --mint-soft: #bfe6d9;
-        --line: #d9e6e1;
-        --card: #ffffff;
-        --radius: 14px;
-        --shadow: 0 10px 30px rgba(8, 56, 47, 0.12);
-      }
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simplex — a simple word processor for Windows</title>
+<meta name="description" content="Simplex is a small word processor for Windows. It opens and saves Word files, prints to PDF, and sends nothing anywhere.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#08382f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308382f'/%3E%3Crect x='9' y='8' width='14' height='3' rx='1.5' fill='%23f7e98e'/%3E%3Crect x='9' y='15' width='14' height='2' rx='1' fill='%235fc9aa'/%3E%3Crect x='9' y='20' width='9' height='2' rx='1' fill='%235fc9aa'/%3E%3C/svg%3E">
 
-      * { box-sizing: border-box; }
+<!--
+  Simplex landing page. One file, no external resources — that is what makes
+  the "loads nothing from anywhere else" line true. A suite tripwire
+  (test:pages, part 12) guards it, and also that the app is linked as ./app/
+  — a root-absolute /app/ would break under /simplex/.
 
-      body {
-        margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        -webkit-text-size-adjust: 100%;
-      }
+  ✎ Two spots need a hand:
+    1. "2.6 MB" is the download size, verified against the published asset
+       (2 699 961 bytes). It appears twice: hero facts line and "Small" card.
+    2. The two illustrations are inline SVGs of the real UI. For real
+       screenshots, replace a <svg> with <img src="images/editor.png" alt="…">
+       inside the marked <figure>. Nothing else changes.
 
-      a { color: var(--emerald); }
-      a:focus-visible,
-      .button:focus-visible {
-        outline: 3px solid var(--mint);
-        outline-offset: 2px;
-        border-radius: 4px;
-      }
+  Deliberately NOT on this page: version number and SHA-256. Both would need
+  editing on every release; the linked release page carries them and is
+  always current.
 
-      .wrap {
-        max-width: 1060px;
-        margin: 0 auto;
-        padding: 0 22px;
-      }
+  Layout: one green block at the top holds the pitch and both views side by
+  side. Everything scales through clamp() and auto-fit grids, so phone,
+  tablet and desktop need no separate thinking.
+-->
 
-      /* Hero -------------------------------------------------------------- */
-      .hero {
-        background: linear-gradient(160deg, var(--deep) 0%, var(--deep-2) 70%, #0d5949 100%);
-        color: #eaf6f1;
-        padding: 56px 0 64px;
-      }
-      .hero .wrap {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-        gap: 44px;
-        align-items: center;
-      }
-      .wordmark {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        font-family: Georgia, "Times New Roman", serif;
-        font-size: 22px;
-        letter-spacing: 0.4px;
-        color: var(--mint);
-      }
-      .wordmark svg { display: block; }
-      .hero h1 {
-        font-family: Georgia, "Times New Roman", serif;
-        font-weight: 400;
-        font-size: clamp(34px, 5vw, 52px);
-        line-height: 1.12;
-        margin: 18px 0 14px;
-        color: #ffffff;
-      }
-      .hero p.claim {
-        margin: 0 0 26px;
-        max-width: 34em;
-        font-size: clamp(16px, 2vw, 19px);
-        color: #cfe8de;
-      }
-      .cta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-bottom: 18px;
-      }
-      .button {
-        display: inline-block;
-        padding: 13px 22px;
-        border-radius: 10px;
-        font-weight: 600;
-        text-decoration: none;
-        border: 2px solid transparent;
-      }
-      .button--primary {
-        background: var(--mint);
-        color: var(--deep);
-      }
-      .button--primary:hover { background: #79d6bc; }
-      .button--secondary {
-        border-color: rgba(255, 255, 255, 0.55);
-        color: #ffffff;
-      }
-      .button--secondary:hover { border-color: var(--mint); color: var(--mint); }
-      .hero .fineprint {
-        font-size: 14px;
-        color: #9fc9bc;
-      }
-      .hero .fineprint a { color: var(--mint); }
+<style>
+:root{
+  --bg:#e7edea;
+  --surface:#fff;
+  --ink:#13201c;
+  --muted:#55665f;
+  --green:#0e6e5a;
+  --green-lift:#13836b;
+  --green-deep:#08382f;
+  --mint:#e0efe9;
+  --mint-line:#cde5dc;
+  --marker:#f7e98e;
 
-      .hero-sheet { filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35)); }
+  --r-sm:10px;
+  --r:16px;
+  --r-lg:22px;
 
-      /* Sections ---------------------------------------------------------- */
-      section { padding: 56px 0; }
-      section h2 {
-        font-family: Georgia, "Times New Roman", serif;
-        font-weight: 400;
-        font-size: clamp(26px, 3.4vw, 34px);
-        margin: 0 0 10px;
-      }
-      section > .wrap > p.lead {
-        margin: 0 0 30px;
-        max-width: 46em;
-        color: var(--ink-soft);
-      }
+  --shadow:0 1px 2px rgba(8,56,47,.05),0 18px 44px -14px rgba(8,56,47,.35);
+  --shadow-sm:0 1px 2px rgba(8,56,47,.04),0 6px 16px -8px rgba(8,56,47,.12);
 
-      .cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-        gap: 18px;
-      }
-      .card {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        padding: 20px 20px 18px;
-      }
-      .card h3 {
-        margin: 10px 0 6px;
-        font-size: 17px;
-      }
-      .card p { margin: 0; font-size: 15px; color: var(--ink-soft); }
-      .card .glyph {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        background: #e7f3ee;
-        display: grid;
-        place-items: center;
-        color: var(--emerald);
-      }
+  --pad:clamp(20px,5vw,32px);
 
-      /* Screenshots --------------------------------------------------------- */
-      .shots {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 26px;
-      }
-      figure.shot {
-        margin: 0;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        overflow: hidden;
-        box-shadow: var(--shadow);
-      }
-      figure.shot svg,
-      figure.shot img {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-      figure.shot figcaption {
-        padding: 12px 16px 14px;
-        font-size: 14px;
-        color: var(--ink-soft);
-        border-top: 1px solid var(--line);
-      }
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;
+  --display:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,sans-serif;
+}
 
-      /* Honest limits ------------------------------------------------------- */
-      .limits {
-        background: #eef6f2;
-        border: 1px solid var(--mint-soft);
-        border-radius: var(--radius);
-        padding: 18px 20px;
-        max-width: 56em;
-      }
-      .limits strong { color: var(--emerald); }
+*,*::before,*::after{box-sizing:border-box}
 
-      /* Windows box --------------------------------------------------------- */
-      .windows {
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        padding: 24px;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 20px;
-        align-items: center;
-      }
-      .windows p { margin: 6px 0 0; color: var(--ink-soft); font-size: 15px; }
-      .windows .button--primary { background: var(--emerald); color: #ffffff; }
-      .windows .button--primary:hover { background: var(--emerald-hover); }
+/* The page begins and ends on the deep green (bar, footer). Painting the root
+   the same colour means an overscroll bounce shows green, never the pale body
+   background; overscroll-behavior stops the bounce where it is supported. */
+html{
+  background:var(--green-deep);
+  overscroll-behavior-y:none;
+  -webkit-text-size-adjust:100%;
+  scroll-behavior:smooth;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
-      /* Footer --------------------------------------------------------------- */
-      footer {
-        background: var(--deep);
-        color: #b9d8cd;
-        padding: 34px 0 40px;
-        font-size: 14px;
-      }
-      footer a { color: var(--mint); }
-      footer .row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 22px;
-        margin-bottom: 12px;
-      }
-      footer p { margin: 6px 0 0; max-width: 60em; }
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-size:clamp(1rem,.96rem + .2vw,1.0625rem);line-height:1.6;
+  font-variant-numeric:lining-nums;
+  overscroll-behavior-y:none;
+}
 
-      @media (max-width: 760px) {
-        .hero .wrap { grid-template-columns: 1fr; }
-        .hero-sheet { max-width: 420px; margin: 0 auto; }
-        .windows { grid-template-columns: 1fr; }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- ============================================================= Hero -->
-    <header class="hero">
-      <div class="wrap">
-        <div>
-          <span class="wordmark" aria-hidden="true">
-            <svg width="26" height="26" viewBox="0 0 32 32">
-              <rect width="32" height="32" rx="7" fill="#0d5949" />
-              <rect x="8" y="6" width="16" height="20" rx="2" fill="#fafaf8" />
-              <path d="M11 11h10M11 15h10M11 19h6" stroke="#0e6e5a" stroke-width="2" stroke-linecap="round" />
-            </svg>
-            Simplex
-          </span>
-          <h1>Just a word processor.</h1>
-          <p class="claim">
-            Simplex is for letters, reports and long documents. You write,
-            format, save to your own disk, exchange DOCX with Word users and
-            print to PDF. It runs offline. <strong>No cloud, no account.</strong>
-          </p>
-          <div class="cta">
-            <a class="button button--primary" href="./app/">Open in the browser</a>
-            <a class="button button--secondary" href="https://github.com/LEJM4/simplex/releases/latest">Download for Windows</a>
-          </div>
-          <p class="fineprint">
-            Free and open source (GPL-3.0). Works best in Chrome and Edge,
-            Firefox with minor limitations. You can install it as an app
-            straight from the browser.
-          </p>
+.wrap{max-width:1180px;margin:0 auto;padding:0 var(--pad)}
+
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;text-wrap:balance}
+h1{font-size:clamp(1.85rem,1.2rem + 3vw,2.9rem);line-height:1.08;letter-spacing:-.026em}
+h2{font-size:clamp(1.35rem,1.1rem + 1.2vw,1.9rem);line-height:1.2;letter-spacing:-.02em}
+h3{font-size:1rem;letter-spacing:-.005em}
+p{margin:0 0 .9em}
+p:last-child{margin-bottom:0}
+.lead{font-size:clamp(1.03rem,.98rem + .35vw,1.15rem);line-height:1.55;color:var(--muted)}
+.small{font-size:.86rem;line-height:1.55;color:var(--muted)}
+
+a{color:var(--green);text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--green-lift)}
+:focus-visible{outline:2px solid var(--marker);outline-offset:3px;border-radius:6px}
+
+/* ---------- top bar ---------- */
+.bar{position:sticky;top:0;z-index:10;background:var(--green-deep)}
+.bar-in{
+  max-width:1180px;margin:0 auto;padding:0 var(--pad);height:60px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.mark{
+  display:flex;align-items:center;gap:10px;color:#fff;
+  font-family:var(--display);font-weight:600;font-size:1.25rem;letter-spacing:-.02em;
+}
+.mark i{width:12px;height:12px;border-radius:4px;background:var(--marker);flex:none}
+.bar .btn{padding:9px 20px;font-size:.86rem}
+
+/* ---------- buttons ---------- */
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin:1.6em 0 1em}
+.btn{
+  font-size:.95rem;font-weight:600;padding:14px 28px;border-radius:999px;
+  text-decoration:none;border:1px solid transparent;
+  transition:background .16s,transform .1s,color .16s;
+}
+.btn-light{background:#fff;color:var(--green-deep)}
+.btn-light:hover{background:var(--mint);color:var(--green-deep)}
+.btn-outline{background:transparent;color:#fff;border-color:rgba(255,255,255,.42)}
+.btn-outline:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-solid{background:var(--green);color:#fff;box-shadow:0 8px 20px -10px rgba(14,110,90,.8)}
+.btn-solid:hover{background:var(--green-lift);color:#fff}
+.btn-ghost{background:var(--surface);color:var(--green);border-color:var(--mint-line);box-shadow:var(--shadow-sm)}
+.btn-ghost:hover{background:var(--mint)}
+.btn:active{transform:translateY(1px)}
+
+/* ---------- hero: the green block ---------- */
+.hero{background:var(--green-deep);color:#fff;padding:clamp(44px,7vw,72px) 0 clamp(40px,6vw,64px)}
+.hero h1{max-width:20ch}
+.hero .lead{color:rgba(255,255,255,.78);margin-top:.9em;max-width:44ch}
+.hero .small{color:rgba(255,255,255,.6)}
+.hl{position:relative;color:var(--green-deep)}
+.hl::before{
+  content:"";position:absolute;left:-.1em;right:-.1em;top:.1em;bottom:.02em;
+  background:var(--marker);z-index:-1;border-radius:3px;transform-origin:left center;
+}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes sweep{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  .hl::before{animation:sweep .55s .4s cubic-bezier(.2,.7,.3,1) both}
+  .hl{animation:tint .01s .55s both}
+  @keyframes tint{from{color:#fff}to{color:var(--green-deep)}}
+}
+
+/* ---------- the two views, side by side ---------- */
+.shots{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:clamp(16px,2.4vw,26px);margin-top:clamp(32px,4.5vw,52px);
+}
+figure{margin:0}
+.shot{background:var(--surface);border-radius:var(--r-lg);padding:8px;box-shadow:var(--shadow)}
+.shot img,.shot svg{display:block;width:100%;height:auto;border-radius:var(--r-sm)}
+figcaption{font-size:.85rem;line-height:1.5;color:rgba(255,255,255,.62);margin-top:12px}
+
+/* ---------- sections ---------- */
+section{padding:clamp(48px,6.5vw,76px) 0}
+.head{max-width:38ch;margin-bottom:clamp(24px,3vw,36px)}
+.head p{margin-top:.5em;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.card{background:var(--mint);border-radius:var(--r);padding:24px 24px}
+.card h3{color:var(--green);margin-bottom:.35em}
+.card p{font-size:.93rem;color:var(--muted);margin:0}
+
+.panel{background:var(--surface);border-radius:var(--r-lg);padding:clamp(26px,3vw,34px) clamp(24px,3vw,38px);box-shadow:var(--shadow-sm);margin-top:14px}
+.panel h3{margin-bottom:.45em}
+.panel p{color:var(--muted);max-width:74ch;font-size:.97rem}
+
+/* ---------- privacy band ---------- */
+.band{background:var(--mint);padding:clamp(48px,6.5vw,76px) 0;scroll-margin-top:70px}
+.band-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(24px,4vw,52px);align-items:center}
+.band h2{font-size:clamp(1.5rem,1.1rem + 1.8vw,2.3rem)}
+.band p{color:var(--muted);max-width:52ch}
+
+/* ---------- download ---------- */
+#download{scroll-margin-top:70px}
+.dl{background:var(--surface);border-radius:var(--r-lg);padding:clamp(30px,4vw,46px) clamp(24px,4vw,44px);box-shadow:var(--shadow-sm)}
+.note{background:var(--mint);border-radius:var(--r);padding:22px 24px;margin-top:1.8em}
+.note h3{margin-bottom:.4em}
+.note p{font-size:.95rem;color:var(--muted);max-width:74ch;margin:0}
+.note p+p{margin-top:.6em}
+
+/* ---------- footer ---------- */
+footer{background:var(--green-deep);color:rgba(255,255,255,.7);font-size:.85rem;padding:30px 0}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px}
+footer a{color:#9fdcc9;margin-right:20px}
+footer a:hover{color:#c6ece0}
+
+/* ---------- reveal ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .js .rise{opacity:0;transform:translateY(14px);transition:opacity .5s ease-out,transform .5s ease-out}
+  .js .rise.in{opacity:1;transform:none}
+}
+
+/* Phones: buttons go full width, headline may use the whole column. */
+@media (max-width:560px){
+  .btns{display:block}
+  .btn{display:block;text-align:center}
+  .btns .btn+.btn{margin-top:9px}
+  .bar .btn{display:inline-block;margin:0}
+  .hero h1,.hero .lead{max-width:none}
+}
+
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:24px;top:24px;background:var(--surface);padding:12px 18px;border-radius:var(--r-sm);z-index:20}
+</style>
+</head>
+<body>
+
+<a class="skip" href="#download">Skip to download</a>
+
+<header class="bar">
+  <div class="bar-in">
+    <span class="mark"><i aria-hidden="true"></i>Simplex</span>
+    <a class="btn btn-light" href="#download">Download</a>
+  </div>
+</header>
+
+<!-- ========== the green block: pitch + both views ========== -->
+<div class="hero">
+  <div class="wrap">
+    <h1>Simplex is a <span class="hl">simple</span> word processor.</h1>
+    <p class="lead">One window, one document. It opens and saves Word files,
+    prints to PDF, and stays on your own computer.</p>
+
+    <div class="btns">
+      <a class="btn btn-light" href="#download">Download for Windows</a>
+      <a class="btn btn-outline" href="./app/">Open in browser</a>
+    </div>
+
+    <p class="small">Windows 10 and 11 · 2.6 MB · free · GPL v3</p><!-- ✎ size -->
+
+    <div class="shots">
+      <!-- ✎ Real screenshot: replace this <svg> with <img src="images/editor.png" alt="…"> -->
+      <figure>
+        <div class="shot">
+          <svg viewBox="0 0 600 400" role="img" aria-label="The Simplex editor: a single toolbar above one white sheet with a heading, text and a picture.">
+            <rect width="600" height="400" fill="#eceff0" />
+            <rect width="600" height="44" fill="#f8faf9" />
+            <g fill="#c9d5d0">
+              <rect x="18" y="15" width="44" height="14" rx="4" />
+              <rect x="74" y="15" width="14" height="14" rx="4" />
+              <rect x="92" y="15" width="14" height="14" rx="4" />
+              <rect x="110" y="15" width="14" height="14" rx="4" />
+              <rect x="136" y="15" width="56" height="14" rx="4" />
+              <rect x="198" y="15" width="26" height="14" rx="4" />
+              <rect x="236" y="15" width="14" height="14" rx="4" />
+              <rect x="254" y="15" width="14" height="14" rx="4" />
+              <rect x="272" y="15" width="14" height="14" rx="4" />
+              <rect x="298" y="15" width="14" height="14" rx="4" />
+              <rect x="316" y="15" width="14" height="14" rx="4" />
+            </g>
+            <rect x="132" y="15" width="1" height="14" fill="#dde5e2" />
+            <rect x="96" y="62" width="408" height="338" rx="3" fill="#ffffff" />
+            <rect x="128" y="86" width="188" height="11" rx="4" fill="#10312a" />
+            <g fill="#93a8a1">
+              <rect x="128" y="116" width="344" height="6" rx="3" />
+              <rect x="128" y="129" width="344" height="6" rx="3" />
+              <rect x="128" y="142" width="272" height="6" rx="3" />
+            </g>
+            <rect x="128" y="168" width="118" height="82" rx="3" fill="#bfe6d9" />
+            <g fill="#93a8a1">
+              <rect x="262" y="168" width="210" height="6" rx="3" />
+              <rect x="262" y="181" width="210" height="6" rx="3" />
+              <rect x="262" y="194" width="210" height="6" rx="3" />
+              <rect x="262" y="207" width="164" height="6" rx="3" />
+              <rect x="262" y="228" width="210" height="6" rx="3" />
+              <rect x="262" y="241" width="128" height="6" rx="3" />
+              <rect x="128" y="272" width="344" height="6" rx="3" />
+              <rect x="128" y="285" width="344" height="6" rx="3" />
+              <rect x="128" y="298" width="300" height="6" rx="3" />
+              <rect x="128" y="319" width="344" height="6" rx="3" />
+              <rect x="128" y="332" width="228" height="6" rx="3" />
+            </g>
+            <rect x="360" y="332" width="2" height="12" fill="#0e6e5a" />
+          </svg>
         </div>
-        <svg class="hero-sheet" viewBox="0 0 340 300" role="img" aria-label="A white document sheet with lines of text">
-          <g transform="rotate(-3 170 150)">
-            <rect x="60" y="18" width="220" height="264" rx="4" fill="#fafaf8" />
-            <rect x="88" y="46" width="120" height="10" rx="3" fill="#10312a" opacity="0.85" />
-            <rect x="88" y="72" width="164" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="86" width="164" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="100" width="132" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="124" width="164" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="138" width="148" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="162" width="76" height="52" rx="3" fill="#bfe6d9" />
-            <rect x="176" y="162" width="76" height="6" rx="3" fill="#7d9c93" />
-            <rect x="176" y="176" width="76" height="6" rx="3" fill="#7d9c93" />
-            <rect x="176" y="190" width="60" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="234" width="164" height="6" rx="3" fill="#7d9c93" />
-            <rect x="88" y="248" width="110" height="6" rx="3" fill="#7d9c93" />
-            <circle cx="170" cy="270" r="3" fill="#43635b" />
-          </g>
-        </svg>
-      </div>
-    </header>
+        <figcaption>One toolbar, one document. No ribbon, no side panels.</figcaption>
+      </figure>
 
-    <!-- ===================================================== What it is -->
-    <section>
-      <div class="wrap">
-        <h2>What is Simplex?</h2>
-        <p class="lead">
-          Simplex covers the 20% of Word that 95% of real documents actually
-          use. The rest was left out on purpose.
-        </p>
-        <div class="cards">
-          <div class="card">
-            <div class="glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7V5h16v2M9 20h6M12 5v15" /></svg>
-            </div>
-            <h3>Everyday formatting</h3>
-            <p>
-              Headings, lists, tables, images, colors, indents and line
-              spacing. Plus find &amp; replace, a live word count and
-              paragraph styles.
-            </p>
-          </div>
-          <div class="card">
-            <div class="glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v10m0 0 4-4m-4 4-4-4" /><path d="M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2" /></svg>
-            </div>
-            <h3>Your files stay yours</h3>
-            <p>
-              A <code>.sdoc</code> file is readable JSON on your own disk.
-              Autosave, rotating backups and a recent-files list are built
-              in. Nothing ever leaves your machine.
-            </p>
-          </div>
-          <div class="card">
-            <div class="glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7h13M8 12h13M8 17h13" /><path d="M3 7h.01M3 12h.01M3 17h.01" /></svg>
-            </div>
-            <h3>Speaks Word</h3>
-            <p>
-              Import and export DOCX. A letter arrives as a letter, with its
-              default font, margins, header, footer and page numbers intact.
-            </p>
-          </div>
-          <div class="card">
-            <div class="glyph" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6" /><rect x="4" y="9" width="16" height="8" rx="2" /><path d="M8 17h8v4H8z" /></svg>
-            </div>
-            <h3>Prints like it should</h3>
-            <p>
-              A true page view with Word's page-break rules, a separate
-              first page for letterheads, and PDF through the normal print
-              dialog.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ======================================================= Screenshots -->
-    <section>
-      <div class="wrap">
-        <h2>What it looks like</h2>
-        <p class="lead">
-          One sheet, one toolbar. That's the whole interface.
-        </p>
-        <div class="shots">
-          <!-- ✎ Screenshot 1: drop in a real screenshot here by replacing
-               the <svg> with <img src="editor.png" alt="…">. -->
-          <figure class="shot">
-            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: the Simplex editor with toolbar and A4 sheet">
-              <rect width="560" height="360" fill="#eceff0" />
-              <rect x="0" y="0" width="560" height="44" fill="#ffffff" />
-              <rect x="14" y="12" width="52" height="20" rx="5" fill="#e7f3ee" />
-              <g fill="#c9d6d1">
-                <rect x="78" y="12" width="20" height="20" rx="5" />
-                <rect x="102" y="12" width="20" height="20" rx="5" />
-                <rect x="134" y="12" width="86" height="20" rx="5" />
-                <rect x="226" y="12" width="34" height="20" rx="5" />
-              </g>
-              <rect x="268" y="12" width="20" height="20" rx="5" fill="#0e6e5a" />
-              <g fill="#c9d6d1">
-                <rect x="292" y="12" width="20" height="20" rx="5" />
-                <rect x="316" y="12" width="20" height="20" rx="5" />
-                <rect x="348" y="12" width="20" height="20" rx="5" />
-                <rect x="372" y="12" width="20" height="20" rx="5" />
-                <rect x="404" y="12" width="20" height="20" rx="5" />
-                <rect x="428" y="12" width="20" height="20" rx="5" />
-                <rect x="460" y="12" width="20" height="20" rx="5" />
-                <rect x="500" y="12" width="20" height="20" rx="5" />
-              </g>
-              <rect x="120" y="66" width="320" height="272" rx="3" fill="#ffffff" />
-              <rect x="152" y="94" width="150" height="12" rx="4" fill="#10312a" />
+      <!-- ✎ Real screenshot: replace this <svg> with <img src="images/pages.png" alt="…"> -->
+      <figure>
+        <div class="shot">
+          <svg viewBox="0 0 600 400" role="img" aria-label="Page view: the bottom of one sheet with a header and a page number, the gap, and the next sheet starting below.">
+            <rect width="600" height="400" fill="#eceff0" />
+            <rect width="600" height="44" fill="#f8faf9" />
+            <g fill="#c9d5d0">
+              <rect x="18" y="15" width="44" height="14" rx="4" />
+              <rect x="74" y="15" width="14" height="14" rx="4" />
+              <rect x="92" y="15" width="14" height="14" rx="4" />
+              <rect x="110" y="15" width="14" height="14" rx="4" />
+              <rect x="136" y="15" width="56" height="14" rx="4" />
+              <rect x="198" y="15" width="26" height="14" rx="4" />
+              <rect x="236" y="15" width="14" height="14" rx="4" />
+              <rect x="254" y="15" width="14" height="14" rx="4" />
+              <rect x="272" y="15" width="14" height="14" rx="4" />
+            </g>
+            <g>
+              <rect x="96" y="62" width="408" height="176" rx="3" fill="#ffffff" />
+              <rect x="128" y="78" width="98" height="6" rx="3" fill="#b9c7c2" />
               <g fill="#93a8a1">
-                <rect x="152" y="122" width="256" height="7" rx="3" />
-                <rect x="152" y="137" width="256" height="7" rx="3" />
-                <rect x="152" y="152" width="210" height="7" rx="3" />
-                <rect x="152" y="176" width="256" height="7" rx="3" />
-                <rect x="152" y="191" width="238" height="7" rx="3" />
+                <rect x="128" y="102" width="344" height="6" rx="3" />
+                <rect x="128" y="115" width="344" height="6" rx="3" />
+                <rect x="128" y="128" width="286" height="6" rx="3" />
+                <rect x="128" y="149" width="344" height="6" rx="3" />
+                <rect x="128" y="162" width="344" height="6" rx="3" />
+                <rect x="128" y="175" width="192" height="6" rx="3" />
               </g>
-              <rect x="152" y="214" width="120" height="66" rx="3" fill="#bfe6d9" />
+              <rect x="292" y="218" width="16" height="7" rx="3" fill="#43635b" />
+            </g>
+            <g>
+              <rect x="96" y="262" width="408" height="138" rx="3" fill="#ffffff" />
+              <rect x="128" y="278" width="98" height="6" rx="3" fill="#b9c7c2" />
               <g fill="#93a8a1">
-                <rect x="284" y="214" width="124" height="7" rx="3" />
-                <rect x="284" y="229" width="124" height="7" rx="3" />
-                <rect x="284" y="244" width="98" height="7" rx="3" />
-                <rect x="152" y="296" width="256" height="7" rx="3" />
-                <rect x="152" y="311" width="180" height="7" rx="3" />
+                <rect x="128" y="302" width="344" height="6" rx="3" />
+                <rect x="128" y="315" width="344" height="6" rx="3" />
+                <rect x="128" y="328" width="344" height="6" rx="3" />
+                <rect x="128" y="341" width="248" height="6" rx="3" />
+                <rect x="128" y="362" width="344" height="6" rx="3" />
+                <rect x="128" y="375" width="310" height="6" rx="3" />
               </g>
-              <rect x="252" y="191" width="2" height="14" fill="#0e6e5a" />
-              <rect x="0" y="338" width="560" height="22" fill="#ffffff" />
-              <rect x="14" y="345" width="90" height="8" rx="4" fill="#c9d6d1" />
-              <rect x="456" y="345" width="90" height="8" rx="4" fill="#c9d6d1" />
-            </svg>
-            <figcaption>
-              The editor: a single-row toolbar, a white sheet, live word
-              count in the status bar.
-            </figcaption>
-          </figure>
-          <!-- ✎ Screenshot 2: drop in a real screenshot here by replacing
-               the <svg> with <img src="pages.png" alt="…">. -->
-          <figure class="shot">
-            <svg viewBox="0 0 560 360" role="img" aria-label="Illustration: page view with two sheets, header and page number">
-              <rect width="560" height="360" fill="#eceff0" />
-              <g>
-                <rect x="96" y="20" width="240" height="320" rx="3" fill="#ffffff" />
-                <rect x="124" y="40" width="112" height="7" rx="3" fill="#b9c7c2" />
-                <rect x="124" y="66" width="184" height="9" rx="3" fill="#10312a" />
-                <g fill="#93a8a1">
-                  <rect x="124" y="90" width="184" height="6" rx="3" />
-                  <rect x="124" y="103" width="184" height="6" rx="3" />
-                  <rect x="124" y="116" width="150" height="6" rx="3" />
-                  <rect x="124" y="136" width="184" height="6" rx="3" />
-                  <rect x="124" y="149" width="184" height="6" rx="3" />
-                  <rect x="124" y="162" width="184" height="6" rx="3" />
-                  <rect x="124" y="175" width="120" height="6" rx="3" />
-                  <rect x="124" y="195" width="184" height="6" rx="3" />
-                  <rect x="124" y="208" width="184" height="6" rx="3" />
-                  <rect x="124" y="221" width="184" height="6" rx="3" />
-                  <rect x="124" y="234" width="184" height="6" rx="3" />
-                  <rect x="124" y="247" width="96" height="6" rx="3" />
-                  <rect x="124" y="267" width="184" height="6" rx="3" />
-                  <rect x="124" y="280" width="184" height="6" rx="3" />
-                  <rect x="124" y="293" width="140" height="6" rx="3" />
-                </g>
-                <rect x="210" y="318" width="12" height="7" rx="3" fill="#43635b" />
-              </g>
-              <g>
-                <rect x="360" y="64" width="150" height="200" rx="3" fill="#ffffff" opacity="0.96" />
-                <rect x="378" y="78" width="70" height="5" rx="2" fill="#b9c7c2" />
-                <g fill="#93a8a1">
-                  <rect x="378" y="96" width="114" height="5" rx="2" />
-                  <rect x="378" y="107" width="114" height="5" rx="2" />
-                  <rect x="378" y="118" width="90" height="5" rx="2" />
-                  <rect x="378" y="134" width="114" height="5" rx="2" />
-                  <rect x="378" y="145" width="114" height="5" rx="2" />
-                  <rect x="378" y="156" width="74" height="5" rx="2" />
-                </g>
-                <rect x="428" y="246" width="10" height="5" rx="2" fill="#43635b" />
-              </g>
-              <rect x="330" y="300" width="140" height="34" rx="8" fill="#0e6e5a" />
-              <rect x="346" y="313" width="108" height="8" rx="4" fill="#bfe6d9" />
-            </svg>
-            <figcaption>
-              Page view: real sheets with headers, footers and page numbers,
-              following Word's page-break rules. Printing means "Save as
-              PDF".
-            </figcaption>
-          </figure>
+            </g>
+          </svg>
         </div>
-      </div>
-    </section>
+        <figcaption>Real pages while you type, with headers and page numbers — not only in the PDF.</figcaption>
+      </figure>
+    </div>
+  </div>
+</div>
 
-    <!-- ===================================================== Honest limits -->
-    <section style="padding-top: 0;">
-      <div class="wrap">
-        <div class="limits">
-          <strong>Fair warning:</strong> Simplex isn't trying to be a full
-          Word clone. Complex layouts come through simplified on import, and
-          there's no track changes, comments or footnotes. In return,
-          everything stays fast, readable and on your machine.
-        </div>
-      </div>
-    </section>
+<!-- ========== what it does / doesn't ========== -->
+<section>
+  <div class="wrap rise">
+    <div class="head">
+      <h2>What it does</h2>
+      <p>The things most documents need, and not much else.</p>
+    </div>
 
-    <!-- ========================================================== Windows -->
-    <section style="padding-top: 8px;">
-      <div class="wrap">
-        <div class="windows">
-          <div>
-            <h2 style="margin: 0;">Simplex for Windows</h2>
-            <p>
-              The installer lives in the GitHub releases and registers the
-              <code>.sdoc</code> file type, so double-clicking a document
-              just works. Windows SmartScreen will warn you about an unknown
-              publisher: click "More info", then "Run anyway". Each release
-              lists a SHA-256 checksum in case you want to verify the
-              download. The browser version updates itself; the desktop app
-              is updated by installing a new version.
-            </p>
-          </div>
-          <a class="button button--primary" href="https://github.com/LEJM4/simplex/releases/latest">Open the releases</a>
-        </div>
-      </div>
-    </section>
+    <div class="grid">
+      <div class="card"><h3>Simple</h3><p>No ribbon, no side panels. A toolbar and your document.</p></div>
+      <div class="card"><h3>Works with Word</h3><p>Opens and saves .docx. Send files to Word users as usual.</p></div>
+      <div class="card"><h3>Small</h3><p>A 2.6 MB download that starts instantly. Word needs a few gigabytes.</p></div><!-- ✎ size -->
+      <div class="card"><h3>The basics</h3><p>Tables, images, links, find and replace, spell check, printing.</p></div>
+      <div class="card"><h3>Autosave</h3><p>Saves while you type and keeps older versions. Your text survives a crash.</p></div>
+      <div class="card"><h3>Inspection mode</h3><p>Shows formatting you didn't mean to apply.</p></div>
+    </div>
 
-    <!-- =========================================================== Footer -->
-    <footer>
-      <div class="wrap">
-        <div class="row">
-          <a href="https://github.com/LEJM4/simplex">Source code on GitHub</a>
-          <a href="https://github.com/LEJM4/simplex/blob/main/LICENSE">License: GPL-3.0</a>
-          <a href="./app/">Open the app</a>
-          <!-- ✎ Optional, if legally required (e.g. German Impressumspflicht):
-          <a href="impressum.html">Impressum</a> -->
-        </div>
-        <p>
-          Privacy in one sentence: this page sets no cookies, loads nothing
-          from third-party servers and collects no data. Your documents are
-          created and stay on your device.
-        </p>
-        <p>© 2026 LEJM4 · Simplex is free software under the GPL-3.0.</p>
+    <div class="panel">
+      <h3>What it doesn't do</h3>
+      <p>Windows only — on a Mac, use the browser version (tested in Chrome,
+      Edge and Firefox; Safari isn't). Heavily formatted Word documents arrive
+      simplified, though never with text missing. No collaboration, no
+      comments, no track changes, no footnotes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== privacy ========== -->
+<div class="band rise" id="privacy">
+  <div class="wrap band-in">
+    <h2>Simplex doesn't send anything.</h2>
+    <div>
+      <p>No account, no telemetry, no ads. Your documents sit on your own disk
+      as readable text you can open in any editor. This page loads nothing from
+      anywhere else either — no fonts, no trackers, no cookies.</p>
+      <p class="small"><a href="https://github.com/LEJM4/simplex">The source code is on GitHub</a> if you want to check.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== download ========== -->
+<section id="download">
+  <div class="wrap rise">
+    <div class="dl">
+      <h2>Download</h2>
+      <p class="small" style="margin-top:.6em">Free, no account, no newsletter.</p>
+
+      <div class="btns">
+        <a class="btn btn-solid" href="https://github.com/LEJM4/simplex/releases/latest">Get Simplex for Windows</a>
+        <a class="btn btn-ghost" href="./app/">Try it in the browser first</a>
       </div>
-    </footer>
-  </body>
+
+      <p class="small">Windows 10 or 11, 64-bit ·
+      <a href="https://github.com/LEJM4/simplex/releases">all versions, file sizes and checksums</a></p>
+
+      <div class="note">
+        <h3>Windows will warn you</h3>
+        <p>Windows will say the publisher is unknown, because I haven't bought a
+        code signing certificate: they cost money every year and need dedicated
+        hardware. Click <b>More info</b>, then <b>Run anyway</b>. If you'd
+        rather not, the <a href="./app/">browser version</a> needs no install.</p>
+        <p>There's no auto-update either — a new version means a new installer.
+        Your documents and settings survive it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <span>
+      <a href="https://github.com/LEJM4/simplex">Source</a>
+      <a href="https://github.com/LEJM4/simplex/blob/main/CHANGELOG.md">Changes</a>
+      <a href="#privacy">Privacy</a>
+      <!-- ✎ Add an imprint only if you decide the law requires one:
+           <a href="imprint.html">Imprint</a> plus landing/imprint.html -->
+    </span>
+    <span>Simplex · <a href="https://github.com/LEJM4/simplex/blob/main/LICENSE">GPL v3</a></span>
+  </div>
+</footer>
+
+<script>
+document.documentElement.classList.add('js');
+
+var blocks = document.querySelectorAll('.rise');
+if (window.IntersectionObserver) {
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.04 });
+  blocks.forEach(function (b) { io.observe(b); });
+} else {
+  blocks.forEach(function (b) { b.classList.add('in'); });
+}
+</script>
+</body>
 </html>
