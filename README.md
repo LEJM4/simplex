@@ -78,7 +78,19 @@ documents survive the update (documents are plain files on disk anyway).
   dialogs, direct Ctrl+S to the file path, `.bak` backup copy and Explorer
   double-click; tested on Windows 10/11. Windows only — macOS/Linux build
   from source but are untested and come without ready-made packages.
-- **Safari:** untested
+- **Safari on iPhone/iPad:** usable in the browser with the same fallbacks
+  as Firefox — saving is always a download into the Files app (iOS has no
+  File System Access API), opening runs through the Files picker, printing
+  goes through the iOS print dialog (share → Save to Files gives a PDF).
+  Two honest limits: double-tapping an `.sdoc` in the Files app does not
+  launch Simplex (iOS has no PWA file handling), and Safari may evict site
+  storage — autosave snapshots, backup generations, app settings — after
+  7 days without a visit. Add Simplex to the Home Screen to keep them:
+  installed web apps are exempt from that eviction. Tested on iPhone and
+  iPad, see the 1.1.0 device protocol.
+- **Safari on macOS:** untested — it runs the same WebKit engine as iOS
+  Safari, so the notes above should carry over, but we only claim what was
+  proven on a device.
 - **Spell check:** uses the browser's dictionaries. Chrome only checks
   languages enabled under *Settings → Languages → Spell check*; if German
   is missing there, German text won't be checked.
@@ -235,8 +247,8 @@ can only be judged in a browser.
 
 **Tests:** `npm run test:pages` checks the page-break rule core headless
 (16 rule cases) plus editor, DOCX, backups, paper-size, first-page,
-format-gate, pending-marks, margin-click and Pages-base integration (142
-checks in total). `npm run test:ui` runs the chrome structure smokes (98
+format-gate, pending-marks, margin-click, Pages-base and WebKit-platform
+integration (159 checks in total). `npm run test:ui` runs the chrome structure smokes (98
 checks): toolbar and status bar build in de and en without console output,
 every button fires its command against a real editor, dialogs open and
 close, disabled states hold (empty undo history, indent limits, page breaks

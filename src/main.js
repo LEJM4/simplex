@@ -15,6 +15,7 @@ import './styles/print.css';
 
 import { settings } from './config/settings.js';
 import { initI18n, t } from './i18n/index.js';
+import { applyPlatformClasses } from './core/platform.js';
 import { attachMarginClick } from './core/marginClick.js';
 import { createEditor } from './core/editor.js';
 import { appState } from './core/appState.js';
@@ -192,6 +193,7 @@ async function init() {
       .catch(() => { /* persistence is a convenience */ });
   });
 
+  applyPlatformClasses(); // plat-* on <html>: the CSS/JS hook for points 15–17
   initTheme();
   applySettingsToCss();
   initDocSettings();

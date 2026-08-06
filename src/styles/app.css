@@ -476,8 +476,12 @@ body {
   border: 1px solid var(--color-border);
   border-radius: 6px;
   box-shadow: var(--shadow-popover);
-  /* Small windows: scroll instead of running past the bottom edge. */
+  /* Small windows: scroll instead of running past the bottom edge. On iOS,
+     vh counts the retracted browser bar — svh is the height that is ALWAYS
+     visible and (unlike dvh) does not jump while the menu is open. Desktop
+     is unchanged: without dynamic browser UI, svh equals vh. */
   max-height: calc(100vh - var(--toolbar-height) - 24px);
+  max-height: calc(100svh - var(--toolbar-height) - 24px);
   overflow-y: auto;
 }
 
@@ -894,6 +898,7 @@ select.dialog-input {
 
 .shortcuts-body {
   max-height: min(560px, 62vh);
+  max-height: min(560px, 62svh); /* iOS: see the toolbar-popover note */
   overflow-y: auto;
   margin: 0 -6px 16px;
   padding: 0 6px;
@@ -1306,4 +1311,60 @@ a.link-bubble-url:hover {
 
 .dialog-button--danger {
   color: var(--color-danger);
+}
+
+/* WebKit/touch foundation (point 14) ----------------------------------------
+   Three iOS-Safari truths, each guarded by a string tripwire in suite
+   part 13 (jsdom has no layout — the real proof is the device protocol):
+
+   1. Focus auto-zoom: iOS zooms the whole page when a text control or select
+      under 16px gains focus; the chrome runs on 13px. On coarse-pointer
+      devices every focusable control class therefore steps up to 16px.
+      Deliberately NOT maximum-scale=1 in the viewport meta: Safari ignores
+      it for user pinching, other browsers do not — the meta route would
+      cost accessibility outside Safari.
+   2. Tap highlight: WebKit flashes its own grey overlay on every tap — off;
+      the chrome has its own :active and focus styles.
+   3. Double-tap zoom: rapid taps on steppers (A−/A+, undo) would zoom the
+      page. touch-action: manipulation keeps pan and pinch, drops double-tap.
+
+   NOT here on purpose: mobile layout (point 15), touch gestures and the
+   keyboard overlay (point 16), modifier labels (point 17). */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* Every focusable chrome control — a NEW text control must join this
+     list, or iOS zooms on its focus (the suite guards the block, not the
+     completeness of the list). */
+  .toolbar-select,
+  .toolbar-input--size,
+  .toolbar-popover-input,
+  .dialog-input,
+  .search-panel-input {
+    font-size: 16px;
+  }
+
+  /* 16px digits need more room than the 13px defaults. */
+  .toolbar-input--size {
+    width: 76px;
+  }
+
+  .toolbar-sizebox .toolbar-input--size,
+  .toolbar--compact .toolbar-sizebox .toolbar-input--size {
+    width: 52px;
+  }
+
+  .toolbar-popover-input {
+    width: 84px;
+  }
 }

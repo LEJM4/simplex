@@ -81,7 +81,19 @@ erhalten (Dokumente sind ohnehin normale Dateien auf der Platte).
   Explorer-Doppelklick; getestet unter Windows 10/11. Nur Windows —
   macOS/Linux sind aus dem Quelltext baubar, aber ungetestet und ohne
   fertige Pakete.
-- **Safari:** ungetestet
+- **Safari auf iPhone/iPad:** im Browser nutzbar mit denselben Fallbacks wie
+  Firefox — Speichern ist immer ein Download in die Dateien-App (iOS hat
+  keine File System Access API), Öffnen läuft über den Dateien-Picker, Druck
+  über den iOS-Druckdialog (Teilen → „In Dateien sichern“ ergibt ein PDF).
+  Zwei ehrliche Grenzen: Doppeltipp auf eine `.sdoc` in der Dateien-App
+  startet Simplex nicht (iOS kennt kein PWA-File-Handling), und Safari kann
+  Site-Speicher — Autosave-Snapshot, Sicherungs-Generationen,
+  App-Einstellungen — nach 7 Tagen ohne Besuch räumen. „Zum Home-Bildschirm
+  hinzufügen“ nimmt die App davon aus: installierte Web-Apps behalten ihren
+  Speicher. Getestet auf iPhone und iPad, siehe Geräteprotokoll 1.1.0.
+- **Safari auf macOS:** ungetestet — gleiche WebKit-Engine wie iOS-Safari,
+  die Hinweise oben sollten also übertragbar sein; behauptet wird nur, was
+  am Gerät bewiesen ist.
 - **Rechtschreibung:** nutzt die Wörterbücher des Browsers. Chrome prüft nur
   Sprachen, die unter *Einstellungen → Sprachen → Rechtschreibprüfung*
   aktiviert sind — fehlt dort Deutsch, werden deutsche Texte nicht geprüft.
@@ -241,8 +253,8 @@ konvergiert; die DOM-Messung selbst ist nur im Browser beurteilbar.
 
 **Tests:** `npm run test:pages` prüft headless den Seitenumbruch-Regelkern
 (16 Regelfälle) plus Editor-, DOCX-, Sicherungs-, Seitenformat-, Erste-Seite-
-Formatgate-, Saat-, Rand-Klick- und Pages-Basis-Integration (142 Checks
-gesamt). `npm run test:ui` fährt die Chrome-Struktur-Smokes (98 Checks): Toolbar und Statusleiste bauen in de und
+Formatgate-, Saat-, Rand-Klick-, Pages-Basis- und WebKit-Plattform-Integration
+(159 Checks gesamt). `npm run test:ui` fährt die Chrome-Struktur-Smokes (98 Checks): Toolbar und Statusleiste bauen in de und
 en ohne Konsolenausgabe, jeder Knopf löst sein Kommando am echten Editor aus,
 Dialoge öffnen und schließen, Disabled-Zustände (Undo leer, Einzug-Grenzen,
 Umbruch in Tabellen). Bewusst ohne Layout-Prüfungen — jsdom hat keine

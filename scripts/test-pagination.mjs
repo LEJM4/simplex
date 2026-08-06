@@ -55,6 +55,14 @@
 //            parties (that guards its own privacy line). String guards —
 //            the real proof is the base-path build in CI.
 //
+//   PART 13 — WebKit foundation (point 14): classifyPlatform() fixtures for
+//            every platform family (iPadOS "MacIntel" masquerade, CriOS
+//            engine truth, WebView2 stays Blink, garbage input degrades),
+//            plus string tripwires: every vh cap has its svh twin, the
+//            coarse-pointer 16px block exists, tap-highlight/touch-action
+//            are set and the module is wired into the boot. jsdom has no
+//            layout — the real proof is the 1.1.0 device protocol.
+//
 // Part 2/3 need jsdom, part 4 needs fake-indexeddb — exact devDependencies
 // since 0.29.2: npm ci installs them, the lockfile freezes their transitives
 // (the 0.29.0 selector-engine lesson).
@@ -1520,6 +1528,151 @@ console.log('\nPART 12 — pages base-path tripwires (static)');
     !/<script[^>]*\ssrc=/i.test(landing) &&
     !/<link[^>]*rel="stylesheet"/i.test(landing) &&
     !/url\(https?:/i.test(landing));
+}
+
+// ---------------------------------------------------------------------------
+// PART 13 — WebKit foundation (point 14). classifyPlatform is the one PURE,
+// headless-provable piece of the WebKit work: user-agent fixtures for every
+// platform family we care about, including the iPadOS "MacIntel" masquerade
+// and the engine truth that every iOS browser is WebKit. The CSS side gets
+// string tripwires in the part-12 spirit — jsdom has no layout engine, the
+// REAL proof is the device protocol shipped with 1.1.0.
+// ---------------------------------------------------------------------------
+console.log('\nPART 13 — WebKit foundation (platform + touch tripwires)');
+{
+  const { classifyPlatform } = await import('../src/core/platform.js');
+
+  const iphone = classifyPlatform({
+    platform: 'iPhone',
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+    maxTouchPoints: 5,
+  });
+  check('iPhone Safari: Apple modifier + iOS + touch + WebKit',
+    iphone.isMac && iphone.isIOS && iphone.isTouch && iphone.isWebKit);
+
+  const ipad = classifyPlatform({
+    platform: 'MacIntel', // iPadOS 13+ masquerade — the tell is the touch points
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+    maxTouchPoints: 5,
+  });
+  check('iPad masquerade (MacIntel + touch points) is recognised as iOS',
+    ipad.isIOS && ipad.isMac && ipad.isTouch && ipad.isWebKit);
+
+  const macSafari = classifyPlatform({
+    platform: 'MacIntel',
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+    maxTouchPoints: 0,
+  });
+  check('macOS Safari: Mac + WebKit, not iOS, no touch',
+    macSafari.isMac && macSafari.isWebKit && !macSafari.isIOS && !macSafari.isTouch);
+
+  const winChrome = classifyPlatform({
+    platform: 'Win32',
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+    maxTouchPoints: 0,
+  });
+  check('Windows Chrome: Blink is not WebKit despite the AppleWebKit token',
+    !winChrome.isWebKit && !winChrome.isMac && !winChrome.isIOS && !winChrome.isTouch);
+
+  const webview2 = classifyPlatform({
+    platform: 'Win32',
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
+    maxTouchPoints: 0,
+  });
+  check('Tauri WebView2 (Edg token) stays outside isWebKit', !webview2.isWebKit && !webview2.isMac);
+
+  const androidChrome = classifyPlatform({
+    platform: 'Linux armv81',
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
+    maxTouchPoints: 5,
+  });
+  check('Android Chrome: touch yes — WebKit, Mac, iOS no',
+    androidChrome.isTouch && !androidChrome.isWebKit && !androidChrome.isMac && !androidChrome.isIOS);
+
+  const iosChrome = classifyPlatform({
+    platform: 'iPhone',
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1',
+    maxTouchPoints: 5,
+  });
+  check('iOS Chrome (CriOS): engine truth — WebKit', iosChrome.isWebKit && iosChrome.isIOS);
+
+  const macEdge = classifyPlatform({
+    platform: 'MacIntel',
+    userAgent:
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0',
+    maxTouchPoints: 0,
+  });
+  check('macOS Edge: Cmd platform yes, WebKit engine no', macEdge.isMac && !macEdge.isWebKit);
+
+  const firefox = classifyPlatform({
+    platform: 'Win32',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/127.0',
+    maxTouchPoints: 0,
+  });
+  check('Firefox (Gecko, no AppleWebKit token) is not WebKit', !firefox.isWebKit);
+
+  const empty = classifyPlatform();
+  check('pure and safe on empty input: everything false',
+    !empty.isMac && !empty.isIOS && !empty.isTouch && !empty.isWebKit);
+
+  const garbage = classifyPlatform({ platform: 42, userAgent: null, maxTouchPoints: 'five' });
+  check('garbage input degrades to false instead of throwing',
+    !garbage.isMac && !garbage.isIOS && !garbage.isTouch && !garbage.isWebKit);
+
+  const runA = classifyPlatform({ platform: 'iPhone', userAgent: 'x AppleWebKit/605 x', maxTouchPoints: 1 });
+  const runB = classifyPlatform({ platform: 'iPhone', userAgent: 'x AppleWebKit/605 x', maxTouchPoints: 1 });
+  check('same input, same output (no hidden global read)',
+    JSON.stringify(runA) === JSON.stringify(runB));
+
+  // --- string tripwires (part-12 honesty: guards, not proof) ---
+  const { readFileSync } = await import('node:fs');
+  const readRel = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
+  const css = readRel('../src/styles/app.css');
+
+  const plainVh = (css.match(/\d+(?:\.\d+)?vh\b/g) ?? []).sort();
+  const smallVh = (css.match(/\d+(?:\.\d+)?svh\b/g) ?? []).map((v) => v.replace('svh', 'vh')).sort();
+  check('every vh cap in app.css has its svh twin (iOS URL-bar truth)',
+    plainVh.length >= 2 && JSON.stringify(plainVh) === JSON.stringify(smallVh),
+    `vh: ${plainVh.join(',')} — svh: ${smallVh.join(',')}`);
+
+  const coarseAt = css.indexOf('@media (hover: none) and (pointer: coarse)');
+  const coarseBlock = (() => {
+    if (coarseAt < 0) return '';
+    const open = css.indexOf('{', coarseAt);
+    let depth = 0;
+    for (let i = open; i < css.length; i += 1) {
+      if (css[i] === '{') depth += 1;
+      if (css[i] === '}') {
+        depth -= 1;
+        if (depth === 0) return css.slice(open, i + 1);
+      }
+    }
+    return '';
+  })();
+  check('coarse-pointer block lifts the focusable controls to 16px (iOS auto-zoom)',
+    coarseBlock.includes('font-size: 16px') &&
+    coarseBlock.includes('.toolbar-input--size') &&
+    coarseBlock.includes('.dialog-input') &&
+    coarseBlock.includes('.search-panel-input') &&
+    coarseBlock.includes('.toolbar-select') &&
+    coarseBlock.includes('.toolbar-popover-input'));
+
+  check('tap highlight is disabled (chrome has its own active/focus styles)',
+    css.includes('-webkit-tap-highlight-color: transparent'));
+
+  check('touch-action: manipulation covers buttons and form controls',
+    /button,\s*\ninput,\s*\nselect,\s*\ntextarea\s*\{\s*\n\s*touch-action: manipulation;/.test(css));
+
+  const mainSrc = readRel('../src/main.js');
+  check('platform module is wired into the boot (no dead code)',
+    mainSrc.includes("from './core/platform.js'") && mainSrc.includes('applyPlatformClasses()'));
 }
 
 console.log(`\nTOTAL: ${passed} ok (${part1Passed} rules + ${passed - part1Passed} integration), ${failed} failed`);

@@ -11,7 +11,7 @@
 export const settings = {
   app: {
     name: 'Simplex', // product/brand name (a proper noun, not translated)
-    version: '1.0.0',    // keep in sync with package.json
+    version: '1.1.0',    // keep in sync with package.json
   },
 
   i18n: {
