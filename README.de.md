@@ -125,12 +125,16 @@ Formate, Farben, Schriften, Tabellen, Bilder, Links, Einzüge, Abstände,
 Seitenformat und -ausrichtung, Kopf-/Fußzeile mit Seitenzahlen inklusive
 „Erste Seite anders“ reisen mit.
 
-**Import (Word → Simplex):** Struktur- und Texttreue — Überschriften,
-Listen, Zeichenformate, Tabellen, Bilder, Links, Hoch-/Tiefstellung,
-Einzüge, manuelle Seitenumbrüche und die Standardschrift des Dokuments
-kommen an. Konzeptbedingt verloren gehen: Farben, abweichende
-Schriften/-größen im Text, Absatz-Ausrichtung und das Seitenformat (der
-Import startet als A4 hoch) — ein Dialog weist auf nicht abbildbare
+**Import (Word → Simplex):** Struktur- und Texttreue — Überschriften
+(seit 1.2.0 sprachunabhängig über Words Gliederungsebenen erkannt, auch aus
+deutschem Word), Listen, Zeichenformate, Tabellen, Bilder, Links,
+Hoch-/Tiefstellung, Einzüge, bewusste Leerzeilen, manuelle Seitenumbrüche
+und die Standardschrift des Dokuments kommen an. Konzeptbedingt verloren
+gehen: Farben, abweichende Schriften/-größen im Text, Absatz-Ausrichtung,
+Absatzabstände (Vor-/Nach-Werte — Leerzeilen überleben, Abstands-Einstellungen
+nicht) und das Seitenformat (der Import startet als A4 hoch). Fetter großer
+Text OHNE Überschriften-Formatvorlage bleibt ein Absatz — es gibt keinen
+semantischen Marker zum Lesen. Ein Dialog weist auf nicht abbildbare
 Formatierungen hin. Kurz: Inhalt ja, pixelgenaues Layout nein.
 
 ## Schnellstart (Entwicklung)

@@ -121,13 +121,17 @@ fonts, tables, images, links, indents, spacing, paper size and orientation,
 header/footer with page numbers including "different first page" all travel
 along.
 
-**Import (Word → Simplex):** faithful in structure and text. Headings,
-lists, character formats, tables, images, links, super/subscript, indents,
-manual page breaks and the document's default font arrive. Lost by design:
-colors, deviating fonts and sizes inside the text, paragraph alignment and
-the paper size (imports start as A4 portrait). A dialog points out
-formatting that couldn't be mapped. In short: content yes, pixel-perfect
-layout no.
+**Import (Word → Simplex):** faithful in structure and text. Headings —
+language-independent since 1.2.0, detected via Word's outline levels, so
+files from German (or any other) Word keep their headings — lists,
+character formats, tables, images, links, super/subscript, indents,
+deliberate blank lines, manual page breaks and the document's default font
+arrive. Lost by design: colors, deviating fonts and sizes inside the text,
+paragraph alignment, paragraph spacing (before/after values — blank lines
+survive, spacing settings don't) and the paper size (imports start as A4
+portrait). Bold large text WITHOUT a heading style stays a paragraph —
+there is no semantic marker to read. A dialog points out formatting that
+couldn't be mapped. In short: content yes, pixel-perfect layout no.
 
 ## Quick start (development)
 

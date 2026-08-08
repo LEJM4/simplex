@@ -63,6 +63,16 @@
 //            are set and the module is wired into the boot. jsdom has no
 //            layout — the real proof is the 1.1.0 device protocol.
 //
+//   PART 14 — DOCX import fidelity (1.2.0): readDocxOutlineStyles maps
+//            styleId → heading level via w:outlineLvl from a synthetic
+//            GERMAN Word file (styleId "berschrift1", basedOn inheritance,
+//            cycle tolerance, val=9 body-text and beyond-h3 excluded, purity,
+//            garbage degrade), and the full mammoth round trip: German
+//            headings become h1/h2, empty paragraphs survive
+//            (ignoreEmptyParagraphs: false), an indented heading stays a
+//            heading (transform order), no unrecognised-style warning for
+//            mapped ids, and the editor parses the result.
+//
 // Part 2/3 need jsdom, part 4 needs fake-indexeddb — exact devDependencies
 // since 0.29.2: npm ci installs them, the lockfile freezes their transitives
 // (the 0.29.0 selector-engine lesson).
@@ -1673,6 +1683,120 @@ console.log('\nPART 13 — WebKit foundation (platform + touch tripwires)');
   const mainSrc = readRel('../src/main.js');
   check('platform module is wired into the boot (no dead code)',
     mainSrc.includes("from './core/platform.js'") && mainSrc.includes('applyPlatformClasses()'));
+}
+
+/* ==========================================================================
+ * PART 14 — DOCX import fidelity (1.2.0)
+ * A synthetic GERMAN Word file (built with fflate the way the format-gate
+ * part builds its legacy ZIP): mammoth's default map only knows the English
+ * "Heading1"/"Heading 1", so these paragraphs used to arrive as plain <p>s
+ * and every deliberate blank line was swallowed. mammoth needs only
+ * word/document.xml + word/styles.xml (findPartPaths fallback, verified
+ * against the pinned 1.12.0).
+ * ========================================================================== */
+console.log('\nPART 14 — DOCX import fidelity (German headings, blank lines)');
+
+{
+  const { zipSync, strToU8 } = await import('fflate');
+  const { readDocxOutlineStyles } = await import('../src/io/docxImport.js');
+
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  // Real German Word writes styleId "berschrift1" (the Ü is dropped from the
+  // ASCII-cleaned id) and a localised w:name — exactly what never matched.
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles ${W}>
+  <w:style w:type="paragraph" w:default="1" w:styleId="Standard"><w:name w:val="Standard"/></w:style>
+  <w:style w:type="paragraph" w:styleId="berschrift1">
+    <w:name w:val="Überschrift 1"/><w:basedOn w:val="Standard"/>
+    <w:pPr><w:outlineLvl w:val="0"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="berschrift2">
+    <w:name w:val="Überschrift 2"/>
+    <w:pPr><w:outlineLvl w:val="1"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="MeinTitel">
+    <w:name w:val="Mein Titel"/><w:basedOn w:val="berschrift1"/>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="berschrift4">
+    <w:name w:val="Überschrift 4"/>
+    <w:pPr><w:outlineLvl w:val="3"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="Textkoerper">
+    <w:name w:val="Textkörper"/>
+    <w:pPr><w:outlineLvl w:val="9"/></w:pPr>
+  </w:style>
+  <w:style w:type="paragraph" w:styleId="ZyklusA"><w:name w:val="Zyklus A"/><w:basedOn w:val="ZyklusB"/></w:style>
+  <w:style w:type="paragraph" w:styleId="ZyklusB"><w:name w:val="Zyklus B"/><w:basedOn w:val="ZyklusA"/></w:style>
+</w:styles>`;
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document ${W}><w:body>
+  <w:p><w:pPr><w:pStyle w:val="berschrift1"/></w:pPr><w:r><w:t>Kapitel</w:t></w:r></w:p>
+  <w:p><w:pPr><w:pStyle w:val="berschrift2"/></w:pPr><w:r><w:t>Abschnitt</w:t></w:r></w:p>
+  <w:p><w:pPr><w:pStyle w:val="MeinTitel"/></w:pPr><w:r><w:t>Erbe</w:t></w:r></w:p>
+  <w:p/>
+  <w:p/>
+  <w:p><w:r><w:t>Fliesstext</w:t></w:r></w:p>
+  <w:p><w:pPr><w:pStyle w:val="berschrift1"/><w:ind w:left="709"/></w:pPr><w:r><w:t>Eingerueckt</w:t></w:r></w:p>
+  <w:p><w:pPr><w:pStyle w:val="berschrift4"/></w:pPr><w:r><w:t>Tief</w:t></w:r></w:p>
+  <w:p><w:pPr><w:pStyle w:val="ZyklusA"/></w:pPr><w:r><w:t>Kreisel</w:t></w:r></w:p>
+</w:body></w:document>`;
+  const germanDocx = zipSync({
+    'word/document.xml': strToU8(documentXml),
+    'word/styles.xml': strToU8(stylesXml),
+  });
+
+  /* 14.1 The styleId → level map itself */
+  const outlineMap = readDocxOutlineStyles(germanDocx);
+  check('outline map carries the German built-in headings (berschrift1→1, berschrift2→2)',
+    outlineMap.berschrift1 === 1 && outlineMap.berschrift2 === 2,
+    JSON.stringify(outlineMap));
+  check('a derived style inherits its level through the basedOn chain',
+    outlineMap.MeinTitel === 1);
+  check('outlineLvl beyond h3 and the body-text value 9 are never mapped',
+    !('berschrift4' in outlineMap) && !('Textkoerper' in outlineMap) &&
+    !('Standard' in outlineMap));
+  check('a basedOn cycle degrades to "no heading" instead of throwing',
+    !('ZyklusA' in outlineMap) && !('ZyklusB' in outlineMap));
+  check('readDocxOutlineStyles is pure (same input → same map)',
+    JSON.stringify(readDocxOutlineStyles(germanDocx)) === JSON.stringify(outlineMap));
+  check('garbage input degrades to an empty map',
+    JSON.stringify(readDocxOutlineStyles(new Uint8Array([1, 2, 3]))) === '{}');
+
+  /* 14.2 The full mammoth round trip with the map applied */
+  const result = await mammoth.convertToHtml(
+    { buffer: Buffer.from(germanDocx) },
+    docxImportOptions(mammoth, outlineMap)
+  );
+  const html = result.value;
+  check('German headings arrive as h1/h2 (language-independent via outlineLvl)',
+    html.includes('<h1>Kapitel</h1>') && html.includes('<h2>Abschnitt</h2>'), html);
+  check('the basedOn-derived heading arrives as h1 too',
+    html.includes('<h1>Erbe</h1>'), html);
+  check('deliberate blank lines survive (ignoreEmptyParagraphs: false)',
+    (html.match(/<p><\/p>/g) || []).length >= 2, html);
+  check('an INDENTED heading stays a heading — never rewritten to sw-indent',
+    html.includes('<h1>Eingerueckt</h1>') && !html.includes('sw-indent'), html);
+  check('outline level 3 (h4 territory) deliberately stays a paragraph',
+    /<p[^>]*>Tief<\/p>/.test(html), html);
+  check('mapped German style ids raise no unrecognised-style warning',
+    !(result.messages ?? []).some((m) =>
+      /berschrift1|berschrift2|MeinTitel/.test(String(m.message))),
+    JSON.stringify(result.messages));
+
+  /* 14.3 …and the editor parses the result into real heading nodes (fresh
+     instance — the shared one is destroyed after part 5, ed2 pattern). */
+  const holder = document.createElement('div');
+  document.body.appendChild(holder);
+  const ed14 = createEditor(holder, { content: html });
+  let h1Count = 0;
+  let h2Count = 0;
+  ed14.state.doc.descendants((node) => {
+    if (node.type.name === 'heading' && node.attrs.level === 1) h1Count += 1;
+    if (node.type.name === 'heading' && node.attrs.level === 2) h2Count += 1;
+  });
+  check('the editor parses the imported HTML into heading nodes (3× h1, 1× h2)',
+    h1Count === 3 && h2Count === 1, `h1=${h1Count} h2=${h2Count}`);
+  ed14.destroy();
 }
 
 console.log(`\nTOTAL: ${passed} ok (${part1Passed} rules + ${passed - part1Passed} integration), ${failed} failed`);
