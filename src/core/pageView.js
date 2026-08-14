@@ -52,6 +52,86 @@ const mmToPx = (mm) => mm * PX_PER_MM;
 const CONTAINER_TYPES = new Set(['bulletList', 'orderedList', 'listItem', 'blockquote']);
 const ATOMIC_TYPES = new Set(['image', 'horizontalRule']);
 
+/**
+ * Flow-unit STRUCTURE of a document — pure: node types, positions and the
+ * break rules that follow from the tree alone, no DOM and no measuring (the
+ * measuring shell below decorates each spec with lazy rects/styles). Split
+ * out so the container-start rule is headless-provable; jsdom has no layout,
+ * but it has a real document tree.
+ *
+ * Containers (lists, quotes) are flattened into their children, so a list
+ * breaks BETWEEN and INSIDE its items exactly like top-level paragraphs.
+ *
+ * `breakPos` (1.2.1) is the position a page break BEFORE the unit must use.
+ * Flattening makes `pos` point at the paragraph INSIDE the list item, and
+ * breaking there leaves the <li> box — and with it the CSS ::marker — behind
+ * on the old page: bullet on one page, text on the next. A unit that is the
+ * FIRST child of its container therefore inherits the container's own break
+ * position, recursively (paragraph → list item → list), which also covers
+ * nested lists and blockquotes. Later children keep their own position: a
+ * break between two items is legal, and a follow-up paragraph inside one
+ * item has no marker to strand.
+ *
+ * @param {import('prosemirror-model').Node} doc
+ * @returns {{node: any, pos: number, end: number, type: string,
+ *            keepWithNext: boolean, splittable: boolean, breakPos: number,
+ *            floating: boolean}[]}
+ */
+export function collectFlowUnits(doc) {
+  const specs = [];
+  const push = (node, pos, breakPos, fields) => {
+    specs.push({
+      node,
+      pos,
+      end: pos + node.nodeSize,
+      breakPos,
+      floating: false,
+      ...fields,
+    });
+  };
+
+  const walk = (node, pos, breakPos) => {
+    const name = node.type.name;
+    if (name === 'pageBreak') {
+      push(node, pos, breakPos, { type: 'pageBreak', keepWithNext: false, splittable: false });
+      return;
+    }
+    if (name === 'table') {
+      push(node, pos, breakPos, { type: 'table', keepWithNext: false, splittable: false });
+      return;
+    }
+    if (ATOMIC_TYPES.has(name)) {
+      push(node, pos, breakPos, {
+        type: 'atomic',
+        keepWithNext: false,
+        splittable: false,
+        floating: Boolean(node.attrs?.float && node.attrs.float !== 'none' && name === 'image'),
+      });
+      return;
+    }
+    if (node.isTextblock) {
+      push(node, pos, breakPos, {
+        type: 'text',
+        keepWithNext: name === 'heading' && settings.pageView.keepHeadingWithNext,
+        splittable: true,
+      });
+      return;
+    }
+    if (CONTAINER_TYPES.has(name)) {
+      node.forEach((child, offset) => {
+        const childPos = pos + 1 + offset;
+        walk(child, childPos, offset === 0 ? breakPos : childPos);
+      });
+      return;
+    }
+    // Unknown block: treat as atomic — safe default.
+    push(node, pos, breakPos, { type: 'atomic', keepWithNext: false, splittable: false });
+  };
+
+  doc.forEach((child, offset) => walk(child, offset, offset));
+  return specs;
+}
+
 /* Formatting for the on-sheet header/footer strips — mirrors the print
    pipeline (settings.print) so the editor shows what the PDF will show. */
 const stripFont = () =>
@@ -511,49 +591,10 @@ class PageViewController {
       };
     };
 
-    const walk = (node, pos) => {
-      const name = node.type.name;
-      if (name === 'pageBreak') {
-        units.push(makeUnit(node, pos, {
-          fields: { type: 'pageBreak', keepWithNext: false, splittable: false },
-        }));
-        return;
-      }
-      if (name === 'table') {
-        units.push(makeUnit(node, pos, {
-          fields: { type: 'table', keepWithNext: false, splittable: false },
-        }));
-        return;
-      }
-      if (ATOMIC_TYPES.has(name)) {
-        const floating = name === 'image' && node.attrs?.float && node.attrs.float !== 'none';
-        units.push(makeUnit(node, pos, {
-          floating,
-          fields: { type: 'atomic', keepWithNext: false, splittable: false },
-        }));
-        return;
-      }
-      if (node.isTextblock) {
-        units.push(makeUnit(node, pos, {
-          fields: {
-            type: 'text',
-            keepWithNext:
-              name === 'heading' && settings.pageView.keepHeadingWithNext,
-            splittable: true,
-          },
-        }));
-        return;
-      }
-      if (CONTAINER_TYPES.has(name)) {
-        node.forEach((child, offset) => walk(child, pos + 1 + offset));
-        return;
-      }
-      // Unknown block: treat as atomic — safe default.
-      units.push(makeUnit(node, pos, {
-        fields: { type: 'atomic', keepWithNext: false, splittable: false },
-      }));
-    };
-    doc.forEach((child, offset) => walk(child, offset));
+    for (const spec of collectFlowUnits(doc)) {
+      const { node, pos, floating, ...fields } = spec;
+      units.push(makeUnit(node, pos, { floating, fields }));
+    }
 
     /* Line boxes of a splittable unit: ONE Range per unit — its client
        rects come one per rendered line fragment; merging overlapping

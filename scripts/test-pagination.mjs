@@ -303,6 +303,65 @@ console.log('PART 1 — computeBreaks rule core');
     JSON.stringify({ converged: again.converged, breaks: again.breaks.length }));
 }
 
+/* 17. Container-start rule (1.2.1): a break before the first child of a list
+ * item must use the HOISTED position — otherwise the <li> box opens on the
+ * old page and CSS draws its ::marker there while the text travels on.
+ * Geometry is the paragraph's; only the reported position moves. */
+{
+  resetPos();
+  const a = unit(0, 400);
+  const b = unit(400, 800);
+  // Paragraph inside list item 2: pos points INSIDE the <li>, breakPos before it.
+  const li = unit(800, 1200, { breakPos: 0 });
+  li.breakPos = li.pos - 3; // synthetic: the <li> opens 3 positions earlier
+  const r = computeBreaks([a, b, li], OPTS, () => []);
+  check('list-item start: break uses the hoisted position, not the inner one',
+    r.breaks.length === 1 && r.breaks[0].kind === 'block' &&
+    r.breaks[0].pos === li.breakPos && r.breaks[0].pos !== li.pos,
+    JSON.stringify(r.breaks));
+  check('hoisting leaves the page geometry untouched',
+    Math.abs(r.breaks[0].fillPx - 200) < 0.01 && r.breaks[0].startY === li.top);
+}
+
+/* 18. A unit without breakPos behaves exactly as before (no silent change to
+ * top-level paragraphs — the field is optional by design). */
+{
+  resetPos();
+  const a = unit(0, 400);
+  const b = unit(400, 1200);
+  const r = computeBreaks([a, b], OPTS, () => []);
+  check('a unit without breakPos still breaks at its own position',
+    r.breaks.length === 1 && r.breaks[0].pos === b.pos);
+}
+
+/* 19. Mid-text split inside a list item stays untouched: the marker already
+ * has its lines, so the split position must NOT be hoisted. */
+{
+  resetPos();
+  const li = unit(0, 1500, { splittable: true });
+  li.breakPos = -5; // would be wrong to use for a split
+  const lines = evenLines(li, 15);
+  const r = computeBreaks([li], OPTS, () => lines);
+  check('a line split inside a list item ignores breakPos',
+    r.breaks.length === 1 && r.breaks[0].kind === 'split' &&
+    r.breaks[0].pos === lines[10].pos,
+    JSON.stringify(r.breaks));
+}
+
+/* 20. Keep-with-next plus hoisting: the resolved target's hoisted position
+ * wins — a heading that starts a list item drags the whole item along. */
+{
+  resetPos();
+  const a = unit(0, 400);
+  const h = unit(400, 600, { keepWithNext: true });
+  h.breakPos = h.pos - 2;
+  const p = unit(600, 1400);
+  const r = computeBreaks([a, h, p], OPTS, () => []);
+  check('keep-with-next resolves to the target, then hoists its position',
+    r.breaks.length === 1 && r.breaks[0].pos === h.breakPos,
+    JSON.stringify(r.breaks));
+}
+
 console.log(`\nPART 1: ${passed} ok, ${failed} failed`);
 if (failed > 0) process.exit(1);
 
@@ -491,6 +550,7 @@ const { unzipSync, strFromU8 } = await import('fflate');
 const { buildDocxDocument } = await import('../src/io/docxExport.js');
 const { docxImportOptions } = await import('../src/io/docxImport.js');
 const { buildPrintCss } = await import('../src/io/pdfPrint.js');
+const { collectFlowUnits } = await import('../src/core/pageView.js');
 const { defaultDocumentSettings, mergeDocumentSettings } = await import('../src/config/settings.js');
 
 /* 3.1 Export writes a real Word page break */
@@ -1797,6 +1857,126 @@ console.log('\nPART 14 — DOCX import fidelity (German headings, blank lines)')
   check('the editor parses the imported HTML into heading nodes (3× h1, 1× h2)',
     h1Count === 3 && h2Count === 1, `h1=${h1Count} h2=${h2Count}`);
   ed14.destroy();
+}
+
+/* ==========================================================================
+ * PART 15 — list/quote page breaks and blank lines in print (1.2.1)
+ * Two separate real-world bugs from one document:
+ *   (a) the bullet stayed on one page while its text moved to the next — the
+ *       break position pointed INSIDE the list item;
+ *   (b) the PDF collapsed every blank line — getHTML() serialises an empty
+ *       paragraph as bare <p></p>, which has no line box at all.
+ * (a) is provable on the real document tree (jsdom has no layout, but it has
+ * a real tree); (b) is a generated-stylesheet tripwire — the visual proof is
+ * the device protocol.
+ * ========================================================================== */
+console.log('\nPART 15 — list breaks and blank lines in print');
+
+{
+  const holder = document.createElement('div');
+  document.body.appendChild(holder);
+  const ed15 = createEditor(holder, {
+    content: {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'before' }] },
+        {
+          type: 'bulletList',
+          content: [
+            { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] },
+            {
+              type: 'listItem',
+              content: [
+                { type: 'paragraph', content: [{ type: 'text', text: 'two' }] },
+                { type: 'paragraph', content: [{ type: 'text', text: 'two-cont' }] },
+              ],
+            },
+          ],
+        },
+        { type: 'blockquote', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'quote' }] }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'after' }] },
+      ],
+    },
+  });
+  const doc15 = ed15.state.doc;
+  const specs = collectFlowUnits(doc15);
+  const byText = (needle) => specs.find((s) => s.node.textContent === needle);
+  const parentAt = (pos) => doc15.resolve(pos).parent.type.name;
+
+  check('the list is flattened into its item paragraphs (v1 behaviour kept)',
+    specs.length === 6 &&
+    specs.map((s) => s.node.textContent).join('|') === 'before|one|two|two-cont|quote|after',
+    `${specs.length}: ${specs.map((s) => s.node.textContent).join('|')}`);
+
+  const one = byText('one');
+  check('FIRST item: inner pos sits inside the listItem, breakPos before the LIST',
+    parentAt(one.pos) === 'listItem' && parentAt(one.breakPos) === 'doc' &&
+    one.breakPos < one.pos,
+    `pos=${one.pos} (${parentAt(one.pos)}) breakPos=${one.breakPos} (${parentAt(one.breakPos)})`);
+
+  const two = byText('two');
+  check('LATER item: breakPos is hoisted to the item, not to the whole list',
+    parentAt(two.breakPos) === 'bulletList' && two.breakPos < two.pos,
+    `pos=${two.pos} (${parentAt(two.pos)}) breakPos=${two.breakPos} (${parentAt(two.breakPos)})`);
+
+  const cont = byText('two-cont');
+  check('a FOLLOW-UP paragraph in the same item is never hoisted (it has no marker)',
+    cont.breakPos === cont.pos && parentAt(cont.pos) === 'listItem');
+
+  const quote = byText('quote');
+  check('a blockquote start hoists out of the quote (its left bar tears alike)',
+    parentAt(quote.pos) === 'blockquote' && parentAt(quote.breakPos) === 'doc' &&
+    quote.breakPos < quote.pos);
+
+  check('plain top-level paragraphs are unchanged (breakPos === pos)',
+    byText('before').breakPos === byText('before').pos &&
+    byText('after').breakPos === byText('after').pos);
+
+  check('collectFlowUnits is pure (same tree → same specs)',
+    JSON.stringify(collectFlowUnits(doc15).map((s) => [s.pos, s.breakPos, s.type])) ===
+    JSON.stringify(specs.map((s) => [s.pos, s.breakPos, s.type])));
+
+  /* …and the rule core turns a hoisted spec into a hoisted break. Real
+     positions plus synthetic geometry, every item ONE line tall — the
+     reported case: the orphan rule refuses a one-line split, so the item
+     travels as a block break, which is exactly where hoisting must apply. */
+  const geo = specs.map((s, k) => ({
+    ...s, top: k * 300, bottom: k * 300 + 300,
+    marginTopPx: 0, marginBottomPx: 0, floatBottom: null,
+  }));
+  const r15 = computeBreaks(
+    geo,
+    { ...OPTS, contentHeight: 800 },
+    (index) => [{ top: geo[index].top, bottom: geo[index].bottom, pos: geo[index].pos + 1 }]
+  );
+  const firstBreak = r15.breaks[0];
+  check('a one-line list item travels whole and reports the HOISTED position',
+    firstBreak !== undefined && firstBreak.kind === 'block' &&
+    firstBreak.pos === two.breakPos && firstBreak.pos !== two.pos,
+    JSON.stringify(r15.breaks.map((b) => ({ pos: b.pos, kind: b.kind }))));
+  check('the reported break position opens the list item on the new page',
+    firstBreak !== undefined && parentAt(firstBreak.pos) === 'bulletList');
+
+  ed15.destroy();
+}
+
+/* Blank lines in print: the generated sheet must restore a line box for
+   empty textblocks — the one sheet that reaches the chunker (0.22.0). */
+{
+  const css = buildPrintCss({
+    pageFormat: 'a4', pageOrientation: 'portrait',
+    pageMarginsMm: { top: 25, right: 20, bottom: 20, left: 25 },
+    headerText: '', footerText: '', firstPageDifferent: false,
+    firstHeaderText: '', firstFooterText: '',
+    pageNumberFormat: 'number', pageNumberPosition: 'center',
+  });
+  check('print CSS gives empty paragraphs a line box (zero-width space)',
+    /p:empty::before/.test(css) && css.includes('\\200B'), css.slice(-400));
+  check('empty headings and quotes get the same treatment',
+    /h1:empty::before/.test(css) && /h2:empty::before/.test(css) &&
+    /h3:empty::before/.test(css) && /blockquote:empty::before/.test(css));
+  check('the rule lives in the GENERATED sheet, not only in print.css',
+    css.indexOf(':empty::before') > css.indexOf('@page'));
 }
 
 console.log(`\nTOTAL: ${passed} ok (${part1Passed} rules + ${passed - part1Passed} integration), ${failed} failed`);

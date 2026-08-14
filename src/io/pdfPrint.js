@@ -124,6 +124,22 @@ ${firstRule}
 h1, h2, h3 { break-after: avoid; }
 tr { break-inside: avoid; }
 img { break-inside: avoid; }
+
+/* Empty paragraphs ARE content (Word semantics — a blank line is a blank
+   line). But getHTML() serialises them as bare <p></p>: no inline content,
+   no line box, height 0. ProseMirror's VIEW fills empty textblocks with a
+   trailing <br> that never enters the document model, so the editor showed
+   blank lines the print path silently collapsed — 38 blank lines on screen,
+   zero in the PDF, and with them the whole page count. A zero-width space
+   restores the line box; it inherits the block's own line-height, so
+   per-paragraph line spacing stays exact. Must live in THIS sheet: the
+   heights decide where the chunker breaks. Editor-safe — an empty paragraph
+   there holds the <br> and is never :empty. */
+p:empty::before,
+h1:empty::before,
+h2:empty::before,
+h3:empty::before,
+blockquote:empty::before { content: "\\200B"; }
 `;
 }
 

@@ -19,6 +19,17 @@
 // flattened into their children by the measurer, so lists break BETWEEN and
 // INSIDE items exactly like top-level paragraphs.
 //
+// Container-start rule (1.2.1): flattening makes a unit's `pos` point at the
+// paragraph INSIDE its list item — a legal position in the flow model, but
+// not in the box model. Breaking there leaves the <li> box OPEN on the old
+// page, where CSS draws its ::marker, while the text moves on: bullet on one
+// page, words on the next. Every unit therefore carries `breakPos` — the
+// position a break before it must actually use, hoisted out of every
+// container whose FIRST child it is (paragraph → list item → list; same for
+// blockquote, whose left bar tears the same way). Deliberately untouched:
+// a mid-text split (the marker already has its lines) and a follow-up
+// paragraph inside the same item (it has no marker of its own).
+//
 // Stability invariant: no active float may span a page boundary. A float
 // poking over the computed edge pulls the break up to its anchor unit —
 // otherwise the spacer's `clear: both` would re-wrap the lines after the
@@ -30,6 +41,11 @@
  * @typedef {Object} PageUnit
  * @property {number} pos            document position BEFORE the unit's node
  * @property {number} end            document position AFTER the unit's node
+ * @property {number} [breakPos]     position a page break BEFORE this unit
+ *                                   must use — `pos` hoisted out of every
+ *                                   container whose first child the unit is
+ *                                   (see container-start rule above).
+ *                                   Defaults to `pos` when absent.
  * @property {number} top            content-space top (border box, no margin)
  * @property {number} bottom         content-space bottom (border box)
  * @property {number} marginTopPx    used margin-top (for head trimming)
@@ -255,7 +271,11 @@ export function computeBreaks(units, options, linesFor) {
 
     const prev = units[target - 1];
     pushBreak({
-      pos: units[target].pos,
+      // Container-start rule: hoisted position, so the <li>/<blockquote> box
+      // opens on the NEW page together with its marker/bar. Geometry keeps
+      // using the unit's own rect — the container's border box starts at the
+      // same line, only its margin-top differs (headTrim, sub-pixel).
+      pos: units[target].breakPos ?? units[target].pos,
       kind: 'block',
       fillPx: Math.max(0, pageEnd - prev.bottom),
       footTrimPx: prev.marginBottomPx,
