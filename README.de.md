@@ -10,9 +10,12 @@ der Dokumente abdecken.
 
 ## Funktionsumfang
 
-- **Schreiben & Formatieren:** Fett/Kursiv/Unterstrichen/Durchgestrichen,
-  Überschriften H1–H3, Zitat, Listen, Ausrichtung inkl. Blocksatz, Schriftart
-  und -größe, Textfarbe und Marker, Zeilen- und Absatzabstand (auch freie Werte)
+- **Schreiben & Formatieren:** Fett/Kursiv/Unterstrichen (Durchgestrichen
+  über Strg+Umschalt+S), Überschriften H1–H3, Zitat, Listen, Ausrichtung
+  inkl. Blocksatz, Schriftart und -größe, Textfarbe und Marker, Zeilen- und
+  Absatzabstand (auch freie Werte), Format übertragen (Formatierung aufnehmen
+  und auf die nächste Auswahl übertragen — Doppelklick auf den Pinsel hält
+  den Modus)
 - **Nie Text verlieren:** debounced Autosave in IndexedDB mit
   Wiederherstellung beim nächsten Start; dazu rotierende Sicherungsstände
   (ca. alle 10 Minuten und vor jedem Überschreiben, Desktop zusätzlich mit

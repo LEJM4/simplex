@@ -73,6 +73,16 @@
 //            heading (transform order), no unrecognised-style warning for
 //            mapped ids, and the editor parses the result.
 //
+//   PART 15 — list/quote breaks + blank lines in print (1.2.1): flow-unit
+//            breakPos hoisting on a real tree, rule-core follow-through,
+//            generated-sheet tripwires for the empty-paragraph line box.
+//
+//   PART 16 — format painter core (1.3.0): captureFormat reads marks (link
+//            excluded) and whitelisted block attrs; wordRangeAt (umlauts,
+//            whitespace); applyCapturedFormat REPLACES target marks, keeps
+//            links, carries block attrs, seeds empty targets via
+//            pendingMarks, one stroke = one undo step.
+//
 // Part 2/3 need jsdom, part 4 needs fake-indexeddb — exact devDependencies
 // since 0.29.2: npm ci installs them, the lockfile freezes their transitives
 // (the 0.29.0 selector-engine lesson).
@@ -1977,6 +1987,117 @@ console.log('\nPART 15 — list breaks and blank lines in print');
     /h3:empty::before/.test(css) && /blockquote:empty::before/.test(css));
   check('the rule lives in the GENERATED sheet, not only in print.css',
     css.indexOf(':empty::before') > css.indexOf('@page'));
+}
+
+/* ==========================================================================
+ * PART 16 — format painter core (1.3.0)
+ * captureFormat / wordRangeAt are pure; applyCapturedFormat runs one
+ * transaction on a real editor. The Word rules under test: capture reads the
+ * selection start (caret = stored marks first), links neither travel nor
+ * die, block attributes ride along, empty targets take the pendingMarks
+ * seed, and one stroke is ONE undo step.
+ * ========================================================================== */
+console.log('\nPART 16 — format painter core');
+
+{
+  const { captureFormat, wordRangeAt, applyCapturedFormat } =
+    await import('../src/core/formatPainter.js');
+  const holder = document.createElement('div');
+  document.body.appendChild(holder);
+  const ed16 = createEditor(holder, {
+    content:
+      '<p style="text-align: right"><strong><em>Quelle</em></strong> mit ' +
+      '<a href="https://example.org">Link</a></p>' +
+      '<p>Ziel eins zwei</p><p></p>',
+  });
+
+  /* capture */
+  ed16.commands.setTextSelection({ from: 2, to: 4 });
+  const cap = captureFormat(ed16.state);
+  check('capture reads bold+italic from the selection start',
+    cap !== null &&
+    cap.marks.some((m) => m.type === 'bold') &&
+    cap.marks.some((m) => m.type === 'italic'),
+    JSON.stringify(cap));
+  check('capture carries the block attributes (alignment whitelist)',
+    cap.block.textAlign === 'right', JSON.stringify(cap.block));
+
+  ed16.commands.setTextSelection(9); // caret inside "mit" (unformatted)
+  const plain = captureFormat(ed16.state);
+  check('caret capture without marks yields an empty mark list',
+    plain !== null && plain.marks.length === 0, JSON.stringify(plain));
+
+  const $link = 14; // caret inside "Link"
+  ed16.commands.setTextSelection($link);
+  const linkCap = captureFormat(ed16.state);
+  check('links are never captured (looks travel, targets do not)',
+    linkCap.marks.every((m) => m.type !== 'link'), JSON.stringify(linkCap.marks));
+
+  /* wordRangeAt */
+  const doc16 = ed16.state.doc;
+  const zielPara = (() => {
+    let found = null;
+    doc16.descendants((node, pos) => {
+      if (!found && node.isTextblock && node.textContent === 'Ziel eins zwei') found = pos;
+    });
+    return found;
+  })();
+  const midWord = zielPara + 1 + 6; // inside "eins"
+  const w = wordRangeAt(doc16, midWord);
+  check('wordRangeAt finds the word around a caret',
+    w !== null && doc16.textBetween(w.from, w.to) === 'eins',
+    w && doc16.textBetween(w.from, w.to));
+  const gap = zielPara + 1 + 4; // the space after "Ziel"
+  check('wordRangeAt on whitespace between words still snaps to a neighbour or null',
+    (() => { const r = wordRangeAt(doc16, gap);
+      return r === null || ['Ziel', 'eins'].includes(doc16.textBetween(r.from, r.to)); })());
+  check('wordRangeAt handles umlauts as word characters', (() => {
+    const ed = createEditor(document.createElement('div'), { content: '<p>Überschrift</p>' });
+    const r = wordRangeAt(ed.state.doc, 3);
+    const ok = r && ed.state.doc.textBetween(r.from, r.to) === 'Überschrift';
+    ed.destroy();
+    return ok;
+  })());
+
+  /* apply — replace semantics, link survival, block attrs, one undo step */
+  ed16.commands.setTextSelection({ from: zielPara + 1, to: zielPara + 1 + 4 });
+  ed16.commands.toggleUnderline(); // pre-format the target: must be REPLACED
+  const before = ed16.getHTML();
+  applyCapturedFormat(ed16, cap, zielPara + 1, zielPara + 1 + 4);
+  check('painting replaces the target formatting (underline gone, bold+italic on)',
+    (() => {
+      ed16.commands.setTextSelection({ from: zielPara + 1, to: zielPara + 1 + 4 });
+      return ed16.isActive('bold') && ed16.isActive('italic') && !ed16.isActive('underline');
+    })(), ed16.getHTML());
+  check('painting carries the block attribute onto the target paragraph',
+    ed16.state.doc.resolve(zielPara + 1).parent.attrs.textAlign === 'right');
+  check('one stroke is ONE undo step', (() => {
+    ed16.commands.undo();
+    return ed16.getHTML() === before;
+  })(), ed16.getHTML());
+
+  /* empty target takes the seed */
+  const emptyPos = (() => {
+    let found = null;
+    doc16.descendants((node, pos) => {
+      if (!found && node.isTextblock && node.content.size === 0) found = pos;
+    });
+    return found;
+  })();
+  applyCapturedFormat(ed16, cap, emptyPos + 1, emptyPos + 1);
+  check('an empty target paragraph takes the capture as pendingMarks seed',
+    (() => {
+      const node = ed16.state.doc.nodeAt(emptyPos);
+      const seed = node?.attrs?.pendingMarks;
+      return Array.isArray(seed) && seed.some((m) => m.type === 'bold');
+    })(), JSON.stringify(ed16.state.doc.nodeAt(emptyPos)?.attrs));
+
+  /* link survives a paint stroke ACROSS it */
+  applyCapturedFormat(ed16, plain, 13, 17);
+  check('painting across a link keeps the link mark (protected)',
+    /<a[^>]+example\.org/.test(ed16.getHTML()), ed16.getHTML());
+
+  ed16.destroy();
 }
 
 console.log(`\nTOTAL: ${passed} ok (${part1Passed} rules + ${passed - part1Passed} integration), ${failed} failed`);

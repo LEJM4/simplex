@@ -22,7 +22,6 @@ export const icons = {
   bold: svg('<path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/>'),
   italic: svg('<line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/>'),
   underline: svg('<path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" y1="20" x2="20" y2="20"/>'),
-  strikethrough: svg('<path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/>'),
 
   // Letter "A" outline; the colored bar underneath is a separate element.
   textColor: svg('<path d="m6 15 6-11 6 11"/><path d="M8.6 11h6.8"/>'),
@@ -43,6 +42,7 @@ export const icons = {
   // Lucide indent-decrease / indent-increase / remove-formatting.
   indentDecrease: svg('<path d="M21 5H11"/><path d="M21 12H11"/><path d="M21 19H11"/><path d="m7 8-4 4 4 4"/>'),
   indentIncrease: svg('<path d="M21 5H11"/><path d="M21 12H11"/><path d="M21 19H11"/><path d="m3 8 4 4-4 4"/>'),
+  formatPainter: svg('<path d="M9 3h9a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H9"/><path d="M9 3H6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3"/><path d="M14 8v3a1 1 0 0 1-1 1h-2a1 1 0 0 0-1 1v2"/><path d="M9 16h2v5a1 1 0 0 1-2 0z"/>'),
   clearFormat: svg('<path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4 8 20"/><path d="m15 15 5 5"/><path d="m20 15-5 5"/>'),
 
   bulletList: svg('<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'),

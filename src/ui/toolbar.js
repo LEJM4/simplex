@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 
 import { t, getLanguage } from '../i18n/index.js';
+import { createFormatPainter } from '../core/formatPainter.js';
 import { appState } from '../core/appState.js';
 import { pendingTextStyleAt } from '../core/pendingMarks.js';
 import { settings } from '../config/settings.js';
@@ -615,10 +616,29 @@ export function initToolbar(root, getEditor, leadingElements = [], actions = {})
     onClick: () => stepFontSize(getEditor, 1),
   });
 
+  /* Format painter (1.3.0) — Word's brush, sits LEFT of clear formatting.
+     Click arms one stroke, double click arms sticky, Esc or a second click
+     ends it; the mode lives in core/formatPainter.js. */
+  const painter = createFormatPainter(getEditor, {
+    onChange: (armed) => setActive(painterButton, armed),
+  });
+  const painterButton = createButton({
+    icon: 'formatPainter', label: t('toolbar.formatPainter'),
+    shortcut: t('shortcut.formatPainter'),
+    toggle: true, onClick: () => painter.toggle(false),
+  });
+  painterButton.addEventListener('dblclick', () => painter.toggle(true));
+  window.addEventListener('keydown', (event) => {
+    if (painter.onShortcut(event)) event.preventDefault();
+  });
+
   /* Clear formatting (feature 2) — Word keeps it in the font group too. */
   const clearFormatButton = createButton({
     icon: 'clearFormat', label: t('toolbar.clearFormat'), shortcut: t('shortcut.clearFormat'),
-    onClick: () => chain().clearFormatting().run(),
+    onClick: () => {
+      painter.disarm();
+      chain().clearFormatting().run();
+    },
   });
 
   /* Basic marks */
@@ -633,10 +653,6 @@ export function initToolbar(root, getEditor, leadingElements = [], actions = {})
   const underlineButton = createButton({
     icon: 'underline', label: t('toolbar.underline'), shortcut: t('shortcut.underline'),
     toggle: true, onClick: () => chain().toggleUnderline().run(),
-  });
-  const strikeButton = createButton({
-    icon: 'strikethrough', label: t('toolbar.strike'), shortcut: t('shortcut.strike'),
-    toggle: true, onClick: () => chain().toggleStrike().run(),
   });
 
   const subscriptButton = createButton({
@@ -748,8 +764,8 @@ export function initToolbar(root, getEditor, leadingElements = [], actions = {})
   if (hasLeading) section({ fixed: true, withSeparator: false }, ...leadingElements);
   section({ fixed: true, withSeparator: hasLeading }, undoButton, redoButton);
   section({}, paragraphSelect);
-  section({}, fontSelect, sizeBox, sizeDecreaseButton, sizeIncreaseButton, clearFormatButton);
-  section({}, boldButton, italicButton, underlineButton, strikeButton, subscriptButton, superscriptButton, linkButton);
+  section({}, fontSelect, sizeBox, sizeDecreaseButton, sizeIncreaseButton, painterButton, clearFormatButton);
+  section({}, boldButton, italicButton, underlineButton, subscriptButton, superscriptButton, linkButton);
   section({}, textColor.element, highlightColor.element);
   section({}, ...alignmentButtons.map((entry) => entry.button), spacingControl);
   section({}, bulletButton, orderedButton, outdentButton, indentButton);
@@ -870,7 +886,6 @@ export function initToolbar(root, getEditor, leadingElements = [], actions = {})
     setActive(boldButton, editor.isActive('bold'));
     setActive(italicButton, editor.isActive('italic'));
     setActive(underlineButton, editor.isActive('underline'));
-    setActive(strikeButton, editor.isActive('strike'));
     setActive(subscriptButton, editor.isActive('subscript'));
     setActive(superscriptButton, editor.isActive('superscript'));
     setActive(linkButton, editor.isActive('link'));

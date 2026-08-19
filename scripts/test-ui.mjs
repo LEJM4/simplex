@@ -324,7 +324,6 @@ for (const [key, mark] of [
   ['toolbar.bold', 'bold'],
   ['toolbar.italic', 'italic'],
   ['toolbar.underline', 'underline'],
-  ['toolbar.strike', 'strike'],
 ]) {
   click(byLabel(key));
   check(`${mark} toggles on via its button`, editor.isActive(mark) === true);
@@ -335,9 +334,48 @@ click(byLabel('toolbar.superscript'));
 check('superscript replaces subscript (schema exclusion, via buttons)',
   editor.isActive('superscript') && !editor.isActive('subscript'));
 
+/* Strikethrough stays a FEATURE without a button (1.3.0): the extension,
+   the shortcut and the DOCX round trip must survive — removing the schema
+   mark would crash every old .sdoc that carries one (v1 freeze). */
+editor.commands.setContent('<p>Alpha beta gamma</p>');
+selectAllText();
+editor.commands.toggleStrike();
+check('strike still works without a toolbar button (v1 freeze guard)',
+  editor.isActive('strike'));
+check('no strike button remains in the toolbar',
+  byAria(toolbarElement, t('toolbar.strike')) === null);
+editor.commands.toggleStrike();
+
+/* Format painter (1.3.0) ---------------------------------------------------- */
+editor.commands.setContent('<p><strong>Fett</strong> und normal</p>');
+{
+  const painterButton = byLabel('toolbar.formatPainter');
+  check('format painter button present', painterButton !== null);
+  check('painter sits directly LEFT of clear formatting',
+    painterButton?.nextElementSibling === byLabel('toolbar.clearFormat'),
+    painterButton?.nextElementSibling?.getAttribute('aria-label'));
+  // Quelle: Caret ins fette Wort, arm, dann Ziel selektieren und pointerup.
+  editor.commands.setTextSelection(2);
+  click(painterButton);
+  check('painter arms (aria-pressed)', painterButton.getAttribute('aria-pressed') === 'true');
+  editor.commands.setTextSelection({ from: 10, to: 16 }); // "normal"
+  editor.view.dom.dispatchEvent(new window.Event('pointerup', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  check('one stroke paints bold onto the target selection',
+    editor.state.doc.textBetween(10, 16) === 'normal' && editor.isActive('bold'),
+    editor.getHTML());
+  check('painter disarms after a single stroke',
+    painterButton.getAttribute('aria-pressed') === 'false');
+  check('undo reverts one paint stroke as ONE step', (() => {
+    editor.commands.undo();
+    editor.commands.setTextSelection({ from: 10, to: 16 });
+    return !editor.isActive('bold');
+  })());
+}
+
 click(byLabel('toolbar.clearFormat'));
 check('clear formatting resets every mark via its button',
-  ['bold', 'italic', 'underline', 'strike', 'superscript'].every(
+  ['bold', 'italic', 'underline', 'superscript'].every(
     (mark) => !editor.isActive(mark)
   ));
 

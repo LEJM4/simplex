@@ -9,10 +9,11 @@ is the 20% of features that cover 95% of real documents.
 
 ## What it does
 
-- **Writing & formatting:** bold/italic/underline/strikethrough, headings
-  H1–H3, block quote, lists, alignment including justified, font family and
-  size, text color and highlighter, line and paragraph spacing (free values
-  too)
+- **Writing & formatting:** bold/italic/underline (strikethrough via
+  Ctrl+Shift+S), headings H1–H3, block quote, lists, alignment including
+  justified, font family and size, text color and highlighter, line and
+  paragraph spacing (free values too), format painter (pick up formatting,
+  paint it onto the next selection — double-click the brush to keep painting)
 - **Never lose text:** debounced autosave to IndexedDB with recovery on the
   next start, plus rotating backup generations (about every 10 minutes and
   before every overwrite; the desktop additionally writes a `.bak` file).

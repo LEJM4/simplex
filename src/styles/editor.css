@@ -628,3 +628,10 @@ body[data-view-mode='pages'] .ProseMirror .sw-page-break-label {
   outline-offset: 1px;
   opacity: 1;
 }
+
+/* Format painter (1.3.0): a brush cursor while the painter is armed. Inline
+   SVG data URI (theme-neutral dark stroke — the sheet is always paper), with
+   the standard copy cursor as fallback. */
+.ProseMirror.sw-format-painter-active {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 3h9a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H9'/><path d='M9 3H6a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3'/><path d='M14 8v3a1 1 0 0 1-1 1h-2a1 1 0 0 0-1 1v2'/><path d='M9 16h2v5a1 1 0 0 1-2 0z'/></svg>") 4 4, copy;
+}

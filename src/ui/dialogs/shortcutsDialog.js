@@ -56,6 +56,7 @@ const SECTIONS = [
       { label: 'toolbar.link', keys: ['shortcut.link'] },
       { label: 'toolbar.fontSizeDecrease', keys: ['shortcut.fontSizeDecrease'] },
       { label: 'toolbar.fontSizeIncrease', keys: ['shortcut.fontSizeIncrease'] },
+      { label: 'toolbar.formatPainter', keys: ['shortcut.formatPainterCopy', 'shortcut.formatPainterPaste'] },
       { label: 'toolbar.clearFormat', keys: ['shortcut.clearFormat'] },
     ],
   },
